@@ -1,0 +1,12 @@
+{
+  // Workspace settings to control which port live preview/server uses.
+  // These keys cover the two most common VS Code live preview extensions:
+  // - "Live Server" by Ritwick Dey (key: liveServer.settings.port)
+  // - "Live Preview" by Microsoft (common keys tried: livePreview.port and livePreview.server.port)
+  // If you use a different extension, check its documentation for the right settings key.
+
+  "liveServer.settings.port": 5501,
+  "livePreview.port": 5501,
+  "livePreview.server.port": 5501,
+  "browserPreview.port": 5501
+}

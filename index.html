@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vårt Bryllup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* 🌿 Grønn baseline */
+            --primary: #A05858;       /* Lys oliven/grønn (lys, naturlig grønn) */
+            --secondary: #2E4F2E;     /* Flaskegrønn (dyp grønn) */
+
+            /* 🌸 Aksent og kontrast */
+            --accent: #C97C7C;        /* Korall/aksent (samme som du ønsket) */
+
+            /* ☀️ Lysere bakgrunn */
+            --light: #DCEAC7;         /* Sunny Green – en lys og gyllen grønnaktig tone 🌞 */ 
+
+            /* 🍷 Mørk kontrast */
+            --dark: #163516;          /* Bordeaux – dyp, mørk aksent */
+
+            /* ⚪ Nøytraler */
+            --white: #FFF8F0;         /* Myk, varm hvit (som du har fra før) */
+            --text-dark: #3B3B3B;     /* Mørk tekst for lesbarhet */
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--white);
+            color: var(--dark);
+        }
+
+        .password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--light) 0%, var(--white) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .password-box {
+            background: white;
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .password-box h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .password-box p {
+            color: var(--accent);
+            margin-bottom: 2rem;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--light);
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .password-error {
+            color: #d32f2f;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .password-submit {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        .password-submit:hover {
+            background: var(--secondary);
+        }
+
+        .header {
+            background: var(--white);
+            padding: 3rem 2rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--light);
+        }
+
+        .header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 4rem;
+            font-weight: 300;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .header .date {
+            font-size: 1.2rem;
+            color: var(--accent);
+            letter-spacing: 2px;
+            margin-bottom: 2rem;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            transition: color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav a:hover, .nav a.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .hero-image {
+            width: 100%;
+            /* height: 50vh; */
+            height: 75vh;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .rsvp-section {
+            background: var(--light);
+            padding: 3rem;
+            border-radius: 10px;
+            margin-bottom: 3rem;
+        }
+
+        .rsvp-section h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            color: var(--secondary);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--accent);
+            border-radius: 5px;
+            font-family: 'Montserrat', sans-serif;
+            background: white;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 2rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 3rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: block;
+            margin: 2rem auto 0;
+        }
+
+        .submit-btn:hover {
+            background: var(--secondary);
+        }
+
+        .thank-you {
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--secondary);
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .info-grid img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .info-text {
+            padding: 2rem;
+            background: var(--light);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .info-text h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .info-text h4 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.35rem;
+            color: var(--secondary);
+            margin: 1rem 0;
+            font-weight: bold; 
+            margin-bottom: 0.3rem;
+        }
+
+        .info-text h5 {
+            margin: 0.5rem 0;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--dark);
+        }
+
+        .info-text .travel-list {
+            margin-left: 1.25rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+            padding-left: 1rem;
+        }
+
+        .info-text .travel-list li {
+            margin-bottom: 0.25rem;
+        }
+
+        .map-container {
+            border-radius: 10px;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .map-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            min-height: 300px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav {
+                gap: 1rem;
+            }
+
+            .nav a {
+                font-size: 0.9rem;
+            }
+        }
+
+        .color-admin {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .color-picker {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1000;
+        }
+
+        .color-picker.active {
+            display: block;
+        }
+
+        .color-input {
+            margin-bottom: 1rem;
+        }
+
+        .color-input label {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
+        }
+
+        .color-input input {
+            width: 100%;
+            padding: 0.5rem;
+        }
+
+        .guest-list {
+            background: var(--light);
+            padding: 2rem;
+            border-radius: 10px;
+        }
+
+        .guest-list h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            color: var(--secondary);
+            margin-bottom: 2rem;
+        }
+
+        .guest-item {
+            background: white;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .page-content {
+            min-height: 60vh;
+        }
+
+        .page-content h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3rem;
+            color: var(--secondary);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        
+    </style>
+</head>
+<body>
+    <!-- PASSORD-BESKYTTELSE - LEGG TIL ØVERST I BODY -->
+    <div id="password-overlay" class="password-overlay">
+        <div class="password-box">
+            <h2>Velkommen</h2>
+            <p>Vennligst skriv inn passord for å se invitasjonen</p>
+            <input type="password" id="password-input" class="password-input" placeholder="Passord">
+            <div class="password-error" id="password-error">Feil passord, prøv igjen</div>
+            <button onclick="checkPassword()" class="password-submit">Åpne</button>
+        </div>
+    </div>
+    <div class="header">
+        <h1>Ingunn & Henrik</h1>
+        <div class="date">12. September 2026</div>
+        <nav class="nav">
+            <a href="#" data-page="home" class="active">Hjem</a>
+            <a href="#gjesteliste" data-page="gjesteliste">Gjesteliste</a>
+            <a href="#gaveliste" data-page="gaveliste">Gaveliste</a>
+            <!-- <a href="#bordplassering" data-page="bordplassering">Bordplassering</a> -->
+            <a href="#bildegalleri" data-page="bildegalleri">Bildegalleri</a>
+        </nav>
+    </div>
+
+    <div id="home-page">
+        <img src="images/collage-ramme.png" alt="Bryllupsbilde" class="hero-image">
+        
+        <div class="container">
+            <div id="rsvp-container" class="rsvp-section">
+                <h2>RSVP</h2>
+                <form id="rsvp-form">
+                    <div class="form-group">
+                        <label for="name">Navn *</label>
+                        <input type="text" id="name" required placeholder="Fullt navn">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="plusones">Navn (hvis dere er to)</label>
+                        <input type="text" id="plusones" placeholder="Fullt navn">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Kommer du/dere? *</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="attending" value="Ja" required> Ja
+                            </label>
+                            <label>
+                                <input type="radio" name="attending" value="Nei"> Nei
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="allergies">Matpreferanser</label>
+                        <textarea id="allergies" rows="3" placeholder="Eventuelle matallergier eller preferanser"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Send inn</button>
+                </form>
+            </div>
+
+            <div class="info-grid">
+                <img src="images/NSH.png" alt="Bryllupsbilde">
+                
+                <div class="info-text">
+                    <h3>Velkommen!</h3>
+                    <h4>Fredag 11. september</h4>
+                    <p><h5>Mingling på bar:</h5> Fra kl. 19:00 – kom og gå som du vil. 
+Drikke kjøpes i baren. </p>
+                    <h4>Lørdag 12. september</h4>
+                    <p><h5>Gjestene ankommer:</h5> kl. 13:00</p>
+                    <p><h5>Vielse:</h5> kl. 14:00</p>
+                    <p><h5>Bobler, kake & kødding:</h5> kl. 15:00-17:00</p>
+                    <p><h5>Middag:</h5> kl. 17:00</p>
+                    <p><h5>Fest:</h5> kl. 22:00-02:00</p>
+                    <p><h5>Nachspiel:</h5> kl. 02:00-09:00</p>
+                    
+                </div>
+                
+                <div class="map-container">
+                    <iframe 
+                        src="https://www.google.com/maps?q=Peter Aas vei 17, 0667 Oslo, Norway&output=embed"
+                        allowfullscreen="" 
+                        loading="lazy">
+                    </iframe>
+                </div>
+                
+                <div class="info-text">
+                    <h3>Praktisk informasjon</h3>
+                    <h4>Toastmastere:</h4>
+                    <h5>Anne Stub</h5>
+                    <p>414 87 580</p>
+                    <h5>Thea Thorleifsson</h5>
+                    <p>976 36 030</p>
+                    <h4>Dresscode:</h4>
+                    <p>Mørk dress / lang kjole</p>
+                    <h5>Sted:</h5> Nordre Skøyen Hovedgård<br>
+                    <h5>Adresse:</h5> Peter Aas vei 17, 0667 Oslo<br>
+                    <h5>Kollektivt:</h5>
+                    <ul class="travel-list">
+                        <li>10 min å gå fra Hellerud stasjon - bane 2 &amp; 3</li>
+                        <li>15 min å gå fra Høyenhall stasjon - bane 1 &amp; 4</li>
+                    </ul>
+                    <h5>Parkering:</h5>
+                    <p>Tilgjengelig ved lokalet</p>
+                    
+                </div>
+            </div>
+
+            <!-- CHOMMIE.NO FORKLARING -->
+            <div style="text-align: center; margin-top: 3rem; padding: 2.5rem 2rem; background: linear-gradient(135deg, var(--light) 100%, var(--dark) 0%); border-radius: 12px; color: var(--white); position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -30px; left: -30px; width: 120px; height: 120px; background: rgba(255,255,255,0.03); border-radius: 50%;"></div>
+                <div style="position: absolute; bottom: -40px; right: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.03); border-radius: 50%;"></div>
+                <p style="font-family: 'Montserrat', sans-serif; font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; color: var(--primary); margin-bottom: 0.75rem;">chommie.no</p>
+                <p style="font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 300; margin-bottom: 0.25rem; color: var(--primary);">chommie</p>
+                <p style="font-size: 1rem; color: var(--dark); margin-bottom: 1.25rem; font-style: italic;">/ˈtʃɒmi/ · «tsjåm-mi»</p>
+                <div style="width: 40px; height: 1px; background: var(--primary); margin: 0 auto 1.25rem;"></div>
+                <p style="font-size: 1.05rem; color: var(--accent); line-height: 1.6; max-width: 500px; margin: 0 auto;">
+                    Sørafrikansk slang for <strong style="color: var(--primary);">venn</strong>, <strong style="color: var(--primary);">kompis</strong>, <strong style="color: var(--primary);">bestevenn</strong>.<br>
+                    <span style="font-size: 0.9rem; color: var(--secondary);">Fra afrikaans «tjommie» — fordi de beste festene er med dine nærmeste chommies ;)</span>
+                </p>
+            </div>
+
+            <!-- LOGG UT-SEKSJON -->
+            <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--light); border-radius: 10px;">
+                <p style="margin-bottom: 1rem; color: var(--dark);">
+                    Logget inn som: <strong id="user-role-display"></strong>
+                </p>
+                <button onclick="logout()" style="background: var(--dark); color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: background 0.3s;">
+                    Logg ut
+                </button>
+            </div>
+        </div>
+    </div>            
+        
+
+<div id="gaveliste-page" class="hidden">
+        <div class="container page-content">
+            <h2>Gaveliste</h2>
+            <!-- ØNSK.NO IFRAME - Erstatt URL med din egen ønskeliste -->
+            <div style="border-radius: 10px; overflow: hidden; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                <iframe 
+                    src="https://onsk.no/lister/1w6-990?s=%24device%3Af986f632-2f69-48d5-a503-1157e855084c"
+                    style="width: 100%; height: 800px; border: none;"
+                    title="Gaveliste">
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="gjesteliste-page" class="hidden">
+        <div class="container page-content">
+            <h2>Gjesteliste</h2>
+            <div id="admin-export-btn" style="text-align: center; margin-bottom: 1rem; display: none;">
+                <button onclick="exportToExcel()" style="background: var(--accent); color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: background 0.3s;">
+                    📊 Eksporter til Excel
+                </button>
+            </div>
+            <div class="guest-list" id="guest-list-container">
+                <p style="text-align: center; color: var(--accent);">Ingen gjester har bekreftet ennå.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="bordplassering-page" class="hidden">
+        <div class="container page-content">
+            <h2>Bordplassering</h2>
+            <div class="info-text">
+                <p style="text-align: center;">Bordplassering vil bli publisert nærmere bryllupsdagen.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="bildegalleri-page" class="hidden">
+        <div class="container page-content">
+            <h2>Bildegalleri</h2>
+            <div class="info-text">
+                <p style="text-align: center;">Bilder fra bryllupet vil bli lagt ut her etter feiringen.</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="color-admin" onclick="toggleColorPicker()">🎨</button>
+    <div class="color-picker" id="colorPicker">
+        <div class="color-input">
+            <label>Primary (Rosa)</label>
+            <input type="color" id="primaryColor" value="#C97C7C" onchange="updateColors()">
+        </div>
+        <div class="color-input">
+            <label>Secondary (Mørkere rosa)</label>
+            <input type="color" id="secondaryColor" value="#A05858" onchange="updateColors()">
+        </div>
+        <div class="color-input">
+            <label>Accent (Grønn)</label>
+            <input type="color" id="accentColor" value="#8B9D83" onchange="updateColors()">
+        </div>
+        <div class="color-input">
+            <label>Light (Lys rosa)</label>
+            <input type="color" id="lightColor" value="#F5E6E8" onchange="updateColors()">
+        </div>
+    </div>
+
+    <script>
+
+        // ===== PASSORD-BESKYTTELSE MED ADMIN OG GJESTE-NIVÅ =====
+        const guestPassword = 'bryllup2026'; // GJESTE-PASSORD - KAN SE GJESTELISTE UTEN ALLERGI
+        const adminPassword = 'admin2026'; // ADMIN-PASSORD - KAN SE ALLERGI OG SLETTE GJESTER
+        let userRole = ''; // 'guest' eller 'admin'
+        
+        function checkPassword() {
+            const input = document.getElementById('password-input').value;
+            const overlay = document.getElementById('password-overlay');
+            const error = document.getElementById('password-error');
+            
+            if (input === adminPassword) {
+                userRole = 'admin';
+                sessionStorage.setItem('authenticated', 'admin');
+                overlay.style.display = 'none';
+                updateRoleDisplay();
+                updateGuestList();
+            } else if (input === guestPassword) {
+                userRole = 'guest';
+                sessionStorage.setItem('authenticated', 'guest');
+                overlay.style.display = 'none';
+                updateRoleDisplay();
+                updateGuestList();
+            } else {
+                error.style.display = 'block';
+                document.getElementById('password-input').value = '';
+                document.getElementById('password-input').focus();
+            }
+        }
+
+        // Check if already authenticated
+        const authStatus = sessionStorage.getItem('authenticated');
+        if (authStatus === 'admin' || authStatus === 'guest') {
+            document.getElementById('password-overlay').style.display = 'none';
+            userRole = authStatus;
+            updateGuestList();
+            updateRoleDisplay(); 
+        }
+
+        // Allow enter key to submit password
+        document.getElementById('password-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+        // ===== SLUTT PÅ PASSORD-BESKYTTELSE =====
+        // ===== LOGG UT-FUNKSJON OG ROLLE-DISPLAY =====
+        function logout() {
+            if (confirm('Er du sikker på at du vil logge ut?')) {
+                sessionStorage.removeItem('authenticated');
+                window.location.href = window.location.pathname;
+            }
+        }
+
+        // Vis brukerrolle på siden
+        function updateRoleDisplay() {
+            const roleDisplay = document.getElementById('user-role-display');
+            if (roleDisplay) {
+                const role = sessionStorage.getItem('authenticated');
+                if (role === 'admin') {
+                    roleDisplay.textContent = 'Administrator';
+                    roleDisplay.style.color = 'var(--secondary)';
+                } else if (role === 'guest') {
+                    roleDisplay.textContent = 'Gjest';
+                    roleDisplay.style.color = 'var(--accent)';
+                }
+            }
+        }
+
+        // Kjør når siden lastes
+        updateRoleDisplay();
+        // ===== SLUTT PÅ LOGG UT =====
+        // Navigation
+        const pages = ['home', 'gaveliste', 'gjesteliste', 'bordplassering', 'bildegalleri'];
+        const navLinks = document.querySelectorAll('.nav a');
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = link.dataset.page;
+                
+                // Update URL
+                if (page === 'home') {
+                    history.pushState({page}, '', '/');
+                } else {
+                    history.pushState({page}, '', `/${page}`);
+                }
+                
+                showPage(page);
+            });
+        });
+
+        function showPage(page) {
+            pages.forEach(p => {
+                const pageEl = document.getElementById(`${p}-page`);
+                if (pageEl) {
+                    pageEl.classList.add('hidden');
+                }
+            });
+            
+            const currentPage = document.getElementById(`${page}-page`);
+            if (currentPage) {
+                currentPage.classList.remove('hidden');
+            }
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.page === page) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // Handle browser back/forward
+        window.addEventListener('popstate', (e) => {
+            const page = e.state?.page || 'home';
+            showPage(page);
+        });
+
+        // Load correct page on initial load
+        const path = window.location.pathname.substring(1);
+        if (path && pages.includes(path)) {
+            showPage(path);
+        }
+
+        // ===== RSVP FORM MED DUPLIKAT-SJEKK OG REDIGER-FUNKSJON =====
+        const form = document.getElementById('rsvp-form');
+        const rsvpContainer = document.getElementById('rsvp-container');
+
+        // Check if already submitted
+        const submittedName = localStorage.getItem('rsvp_name');
+        if (submittedName) {
+            showThankYou(submittedName);
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value.trim();
+            const formData = {
+                name: name,
+                plusones: document.getElementById('plusones').value,
+                attending: document.querySelector('input[name="attending"]:checked').value,
+                allergies: document.getElementById('allergies').value,
+                timestamp: new Date().toISOString()
+            };
+
+            // DUPLIKAT-SJEKK: Sjekk om navnet allerede finnes
+            let guests = JSON.parse(localStorage.getItem('guests') || '[]');
+            const existingGuest = guests.find(g => g.name.toLowerCase() === name.toLowerCase());
+            
+            if (existingGuest) {
+                alert('Dette navnet er allerede registrert. Hvis du vil endre informasjonen din, kontakt bryllupsparet.');
+                return;
+            }
+
+            try {
+                // SEND TIL GOOGLE SHEETS
+                const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzxMAOFaWvgyGaTdeeEOaDDwM2DcPfkBTzOaGugz021Ub-syxU8XRxNzU0eJ5IHcsOJqA/exec';
+                
+                try {
+                    // Bruker GET med query-params - mest pålitelig med Apps Script
+                    const params = new URLSearchParams({
+                        name: formData.name,
+                        plusones: formData.plusones || '',
+                        attending: formData.attending,
+                        allergies: formData.allergies || '',
+                        timestamp: formData.timestamp
+                    });
+                    await fetch(SHEET_URL + '?' + params.toString(), {
+                        method: 'GET',
+                        mode: 'no-cors'
+                    });
+                } catch (sheetError) {
+                    console.warn('Google Sheets-innsending feilet, lagrer kun lokalt:', sheetError);
+                }
+
+                // Store guest data lokalt
+                guests.push(formData);
+                localStorage.setItem('guests', JSON.stringify(guests));
+                localStorage.setItem('rsvp_name', name);
+                
+                showThankYou(name);
+                updateGuestList();
+            } catch (error) {
+                alert('Noe gikk galt. Vennligst prøv igjen.');
+            }
+        });
+
+        function showThankYou(name) {
+            const guests = JSON.parse(localStorage.getItem('guests') || '[]');
+            const userGuest = guests.find(g => g.name === name);
+            
+            // SJEKK OM GJESTEN FAKTISK FINNES I LISTEN (kanskje admin slettet dem)
+            if (!userGuest) {
+                // Fjern lagret navn og vis RSVP igjen
+                localStorage.removeItem('rsvp_name');
+                rsvpContainer.innerHTML = `
+                    <h2>RSVP</h2>
+                    <p style="text-align: center; color: var(--accent); margin-bottom: 2rem;">
+                        Det ser ut som din registrering ikke finnes. Vennligst registrer deg på nytt.
+                    </p>
+                ` + form.outerHTML;
+                return;
+            }
+            
+            // Vis +1s i takk-meldingen hvis registrert
+            let nameDisplay = name;
+            if (userGuest.plusones) {
+                nameDisplay = `${name} og ${userGuest.plusones}`;
+            }
+
+            let content = `<div class="thank-you"><h2>Takk for innsendingen, ${nameDisplay}!</h2><p>Vi gleder oss til å se deg.</p>`;
+            content += `<button onclick="editRSVP()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; font-family: 'Montserrat', sans-serif;">Rediger mitt svar</button>`;
+            content += '</div>';
+            rsvpContainer.innerHTML = content;
+        }
+
+        // Function to allow user to edit their own RSVP
+        window.editRSVP = function() {
+            const name = localStorage.getItem('rsvp_name');
+            if (confirm('Er du sikker på at du vil redigere ditt svar?')) {
+                // Remove from guests list
+                let guests = JSON.parse(localStorage.getItem('guests') || '[]');
+                guests = guests.filter(g => g.name !== name);
+                localStorage.setItem('guests', JSON.stringify(guests));
+                
+                // Clear stored name
+                localStorage.removeItem('rsvp_name');
+                
+                // Reload page
+                location.reload();
+            }
+        };
+
+        // GJESTELISTE MED ADMIN/GJESTE-VISNING
+        function updateGuestList() {
+            const guests = JSON.parse(localStorage.getItem('guests') || '[]');
+            const attending = guests.filter(g => g.attending === 'Ja');
+            const notAttending = guests.filter(g => g.attending === 'Nei');
+            const container = document.getElementById('guest-list-container');
+            const isAdmin = sessionStorage.getItem('authenticated') === 'admin';
+            
+            const exportBtn = document.getElementById('admin-export-btn');
+            if (exportBtn) {
+                exportBtn.style.display = isAdmin ? 'block' : 'none';
+            }
+            
+            if (attending.length === 0 && notAttending.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--accent);">Ingen gjester har svart ennå.</p>';
+                return;
+            }
+            
+            let html = '<h3 style="color: var(--secondary); margin-bottom: 1rem; font-family: Cormorant Garamond, serif;">Kommer (' + attending.length + ')</h3>';
+            
+            if (attending.length === 0) {
+                html += '<p style="color: var(--accent); margin-bottom: 1rem;">Ingen har bekreftet ennå.</p>';
+            } else {
+                html += attending.map(guest => `
+                    <div class="guest-item">
+                        <strong>${guest.name}</strong>${guest.plusones ? ` <strong>&</strong> <strong>${guest.plusones}</strong>` : ''}
+                        ${isAdmin && guest.allergies ? `<br><small style="color: var(--accent);">Allergi: ${guest.allergies}</small>` : ''}
+                        ${isAdmin ? `<button onclick="deleteGuest('${guest.name}')" style="float: right; background: #d32f2f; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; font-size: 0.85rem;">Slett</button>` : ''}
+                    </div>
+                `).join('');
+            }
+            
+            if (isAdmin && notAttending.length > 0) {
+                html += '<h3 style="color: var(--dark); margin-top: 2rem; margin-bottom: 1rem; font-family: Cormorant Garamond, serif;">Kommer ikke (' + notAttending.length + ')</h3>';
+                html += notAttending.map(guest => `
+                    <div class="guest-item" style="opacity: 0.6;">
+                        <strong>${guest.name}</strong>${guest.plusones ? ` <strong>&</strong> <strong>${guest.plusones}</strong>` : ''}
+                        <button onclick="deleteGuest('${guest.name}')" style="float: right; background: #d32f2f; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; font-size: 0.85rem;">Slett</button>
+                    </div>
+                `).join('');
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // ADMIN-FUNKSJON: Slett gjester
+        window.deleteGuest = function(name) {
+            if (sessionStorage.getItem('authenticated') !== 'admin') {
+                alert('Kun admin kan slette gjester');
+                return;
+            }
+            
+            if (confirm(`Er du sikker på at du vil slette ${name}?`)) {
+                let guests = JSON.parse(localStorage.getItem('guests') || '[]');
+                guests = guests.filter(g => g.name !== name);
+                localStorage.setItem('guests', JSON.stringify(guests));
+                updateGuestList();
+            }
+        };
+
+        // EKSPORT TIL EXCEL/CSV (KUN ADMIN)
+        window.exportToExcel = function() {
+            if (sessionStorage.getItem('authenticated') !== 'admin') {
+                alert('Kun admin kan eksportere');
+                return;
+            }
+            
+            const guests = JSON.parse(localStorage.getItem('guests') || '[]');
+            
+            let csv = '\uFEFF' + 'Navn,Partner (+1s),Kommer,Matpreferanse\n';
+            guests.forEach(g => {
+                csv += `"${g.name}","${g.plusones || ''}","${g.attending}","${(g.allergies || '').replace(/"/g, '""')}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'gjesteliste_' + new Date().toISOString().split('T')[0] + '.csv';
+            link.click();
+        };
+        // ===== SLUTT PÅ RSVP OG GJESTELISTE =====
+
+        // Color picker
+        function toggleColorPicker() {
+            document.getElementById('colorPicker').classList.toggle('active');
+        }
+
+        function updateColors() {
+            const primary = document.getElementById('primaryColor').value;
+            const secondary = document.getElementById('secondaryColor').value;
+            const accent = document.getElementById('accentColor').value;
+            const light = document.getElementById('lightColor').value;
+            
+            document.documentElement.style.setProperty('--primary', primary);
+            document.documentElement.style.setProperty('--secondary', secondary);
+            document.documentElement.style.setProperty('--accent', accent);
+            document.documentElement.style.setProperty('--light', light);
+        }
+        updateRoleDisplay();
+        updateGuestList();
+    </script>
+</body>
+</html>
