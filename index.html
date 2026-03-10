@@ -75,12 +75,20 @@
         .password-input {
             width: 100%;
             padding: 1rem;
+            padding-right: 3rem;
             border: 2px solid var(--light);
             border-radius: 8px;
             font-size: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 0;
             text-align: center;
             font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Skjul nettleserens innebygde øye-ikon */
+        .password-input::-ms-reveal,
+        .password-input::-ms-clear,
+        .password-input::-webkit-credentials-auto-fill-button {
+            display: none;
         }
 
         .password-input:focus {
@@ -422,7 +430,13 @@
         <div class="password-box">
             <h2>Velkommen</h2>
             <p>Vennligst skriv inn passord for å se invitasjonen</p>
-            <input type="password" id="password-input" class="password-input" placeholder="Passord">
+            <div style="position: relative; width: 100%; margin-bottom: 1rem;">
+                <input type="password" id="password-input" class="password-input" placeholder="Passord" autocomplete="off">
+                <button type="button" onclick="togglePasswordVisibility()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--accent); padding: 0.25rem; display: flex; align-items: center;">
+                    <svg id="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg id="eye-closed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+            </div>
             <div class="password-error" id="password-error">Feil passord, prøv igjen</div>
             <button onclick="checkPassword()" class="password-submit">Åpne</button>
         </div>
@@ -483,15 +497,15 @@
                 <div class="info-text">
                     <h3>Velkommen!</h3>
                     <h4>Fredag 11. september</h4>
-                    <p><h5>Mingling på bar:</h5> Fra kl. 19:00 – kom og gå som du vil. 
+                    <p><h5>Mingling på bar:</h5> Fra 19:00 – kom og gå som du vil. 
 Drikke kjøpes i baren. </p>
                     <h4>Lørdag 12. september</h4>
-                    <p><h5>Gjestene ankommer:</h5> kl. 13:00</p>
-                    <p><h5>Vielse:</h5> kl. 14:00</p>
-                    <p><h5>Bobler, kake & kødding:</h5> kl. 15:00-17:00</p>
-                    <p><h5>Middag:</h5> kl. 17:00</p>
-                    <p><h5>Fest:</h5> kl. 22:00-02:00</p>
-                    <p><h5>Nachspiel:</h5> kl. 02:00-09:00</p>
+                    <p><h5>Gjestene ankommer:</h5> 13:00</p>
+                    <p><h5>Vielse:</h5> 14:00</p>
+                    <p><h5>Bobler, kake & kødding:</h5> 15:00-17:00</p>
+                    <p><h5>Middag:</h5> 17:00</p>
+                    <p><h5>Fest:</h5> 22:00-02:00</p>
+                    <p><h5>Nachspiel:</h5> 02:00-09:00</p>
                     
                 </div>
                 
@@ -621,8 +635,23 @@ Drikke kjøpes i baren. </p>
     <script>
 
         // ===== PASSORD-BESKYTTELSE MED ADMIN OG GJESTE-NIVÅ =====
-        const guestPassword = 'bryllup2026'; // GJESTE-PASSORD - KAN SE GJESTELISTE UTEN ALLERGI
-        const adminPassword = 'admin2026'; // ADMIN-PASSORD - KAN SE ALLERGI OG SLETTE GJESTER
+        function togglePasswordVisibility() {
+            const input = document.getElementById('password-input');
+            const eyeOpen = document.getElementById('eye-open');
+            const eyeClosed = document.getElementById('eye-closed');
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeOpen.style.display = 'none';
+                eyeClosed.style.display = 'block';
+            } else {
+                input.type = 'password';
+                eyeOpen.style.display = 'block';
+                eyeClosed.style.display = 'none';
+            }
+        }
+
+        const guestPassword = 'Ingunn&Henrik2026'; // GJESTE-PASSORD - KAN SE GJESTELISTE UTEN ALLERGI
+        const adminPassword = 'admin-rettigheter-2026'; // ADMIN-PASSORD - KAN SE ALLERGI OG SLETTE GJESTER
         let userRole = ''; // 'guest' eller 'admin'
         
         function checkPassword() {
