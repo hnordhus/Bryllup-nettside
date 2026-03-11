@@ -774,6 +774,7 @@ Drikke kjøpes i baren. </p>
         }
 
         // ===== RSVP FORM MED DUPLIKAT-SJEKK OG REDIGER-FUNKSJON =====
+        const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzxMAOFaWvgyGaTdeeEOaDDwM2DcPfkBTzOaGugz021Ub-syxU8XRxNzU0eJ5IHcsOJqA/exec';
         const form = document.getElementById('rsvp-form');
         const rsvpContainer = document.getElementById('rsvp-container');
 
@@ -803,14 +804,19 @@ Drikke kjøpes i baren. </p>
                 alert('Dette navnet er allerede registrert. Hvis du vil endre informasjonen din, kontakt bryllupsparet.');
                 return;
             }
+            // Vis laste-indikator
+            const submitBtn = form.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:0.5rem;"><svg width="18" height="18" viewBox="0 0 24 24" style="animation:spin 1s linear infinite;"><style>@keyframes spin{to{transform:rotate(360deg)}}</style><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31 31" stroke-linecap="round"/></svg> Sender inn...</span>';
+            submitBtn.style.opacity = '0.7';
 
             try {
                 // SEND TIL GOOGLE SHEETS
-                const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzxMAOFaWvgyGaTdeeEOaDDwM2DcPfkBTzOaGugz021Ub-syxU8XRxNzU0eJ5IHcsOJqA/exec';
-                
                 try {
                     // Bruker GET med query-params - mest pålitelig med Apps Script
                     const params = new URLSearchParams({
+                        action: 'add',
                         name: formData.name,
                         plusones: formData.plusones || '',
                         attending: formData.attending,
@@ -834,6 +840,9 @@ Drikke kjøpes i baren. </p>
                 updateGuestList();
             } catch (error) {
                 alert('Noe gikk galt. Vennligst prøv igjen.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                submitBtn.style.opacity = '1';
             }
         });
 
@@ -870,15 +879,20 @@ Drikke kjøpes i baren. </p>
         window.editRSVP = function() {
             const name = localStorage.getItem('rsvp_name');
             if (confirm('Er du sikker på at du vil redigere ditt svar?')) {
-                // Remove from guests list
+                // Slett fra Google Sheets
+                try {
+                    const params = new URLSearchParams({ action: 'delete', name: name });
+                    fetch(SHEET_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
+                } catch (e) {
+                    console.warn('Kunne ikke slette fra Google Sheets:', e);
+                }
+
+                // Remove from local guests list
                 let guests = JSON.parse(localStorage.getItem('guests') || '[]');
                 guests = guests.filter(g => g.name !== name);
                 localStorage.setItem('guests', JSON.stringify(guests));
                 
-                // Clear stored name
                 localStorage.removeItem('rsvp_name');
-                
-                // Reload page
                 location.reload();
             }
         };
@@ -936,6 +950,14 @@ Drikke kjøpes i baren. </p>
             }
             
             if (confirm(`Er du sikker på at du vil slette ${name}?`)) {
+                // Slett fra Google Sheets
+                try {
+                    const params = new URLSearchParams({ action: 'delete', name: name });
+                    fetch(SHEET_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
+                } catch (e) {
+                    console.warn('Kunne ikke slette fra Google Sheets:', e);
+                }
+
                 let guests = JSON.parse(localStorage.getItem('guests') || '[]');
                 guests = guests.filter(g => g.name !== name);
                 localStorage.setItem('guests', JSON.stringify(guests));
