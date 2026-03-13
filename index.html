@@ -801,23 +801,9 @@ Drikke kjøpes i baren. </p>
             const existingGuest = guests.find(g => g.name.toLowerCase() === name.toLowerCase());
             
             if (existingGuest) {
-                if (confirm('Det ser ut som du allerede har sendt inn svar. Vil du redigere svaret ditt?')) {
-                    // Slett gammel registrering fra Google Sheets
-                    try {
-                        const delParams = new URLSearchParams({ action: 'delete', name: existingGuest.name });
-                        await fetch(SHEET_URL + '?' + delParams.toString(), { method: 'GET', mode: 'no-cors' });
-                    } catch (e) {
-                        console.warn('Kunne ikke slette fra Google Sheets:', e);
-                    }
-                    // Fjern fra lokal liste
-                    guests = guests.filter(g => g.name.toLowerCase() !== name.toLowerCase());
-                    localStorage.setItem('guests', JSON.stringify(guests));
-                } else {
-                    // Vis takk-melding i stedet
-                    localStorage.setItem('rsvp_name', existingGuest.name);
-                    showThankYou(existingGuest.name);
-                    return;
-                }
+                localStorage.setItem('rsvp_name', existingGuest.name);
+                showThankYou(existingGuest.name, true);
+                return;
             }
             // Vis laste-indikator
             const submitBtn = form.querySelector('.submit-btn');
@@ -845,22 +831,14 @@ Drikke kjøpes i baren. </p>
                         submitBtn.disabled = false;
                         submitBtn.textContent = originalText;
                         submitBtn.style.opacity = '1';
-                        if (confirm('Det ser ut som du allerede har sendt inn svar. Vil du redigere svaret ditt?')) {
-                            const delParams = new URLSearchParams({ action: 'delete', name: formData.name });
-                            await fetch(SHEET_URL + '?' + delParams.toString());
-                            // Send inn på nytt etter sletting
-                            const retryParams = new URLSearchParams({
-                                action: 'add',
-                                name: formData.name,
-                                plusones: formData.plusones || '',
-                                attending: formData.attending,
-                                allergies: formData.allergies || '',
-                                timestamp: formData.timestamp
-                            });
-                            await fetch(SHEET_URL + '?' + retryParams.toString());
-                        } else {
-                            return;
+                        // Lagre lokalt så showThankYou finner gjesten
+                        if (!guests.find(g => g.name.toLowerCase() === formData.name.toLowerCase())) {
+                            guests.push(formData);
+                            localStorage.setItem('guests', JSON.stringify(guests));
                         }
+                        localStorage.setItem('rsvp_name', formData.name);
+                        showThankYou(formData.name, true);
+                        return;
                     }
                 } catch (sheetError) {
                     console.warn('Google Sheets-innsending feilet, lagrer kun lokalt:', sheetError);
@@ -881,7 +859,7 @@ Drikke kjøpes i baren. </p>
             }
         });
 
-        function showThankYou(name) {
+        function showThankYou(name, isDuplicate) {
             const guests = JSON.parse(localStorage.getItem('guests') || '[]');
             const userGuest = guests.find(g => g.name === name);
             
@@ -904,7 +882,11 @@ Drikke kjøpes i baren. </p>
                 nameDisplay = `${name} og ${userGuest.plusones}`;
             }
 
-            let content = `<div class="thank-you"><h2>Takk for innsendingen, ${nameDisplay}!</h2><p>Vi gleder oss til å se ${userGuest.plusones ? 'dere' : 'deg'}.</p>`;
+            let content = '<div class="thank-you">';
+            if (isDuplicate) {
+                content += `<p style="color: #d32f2f; font-size: 0.9rem; margin-bottom: 0.5rem;">Det ser ut som ${userGuest.plusones ? 'dere' : 'du'} har registrert ${userGuest.plusones ? 'dere' : 'deg'} før</p>`;
+            }
+            content += `<h2>Takk for innsendingen, ${nameDisplay}!</h2><p>Vi gleder oss til å se ${userGuest.plusones ? 'dere' : 'deg'}.</p>`;
             content += `<button onclick="editRSVP()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; font-family: 'Montserrat', sans-serif;">Rediger mitt svar</button>`;
             content += '</div>';
             rsvpContainer.innerHTML = content;
