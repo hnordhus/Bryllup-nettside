@@ -801,8 +801,23 @@ Drikke kjøpes i baren. </p>
             const existingGuest = guests.find(g => g.name.toLowerCase() === name.toLowerCase());
             
             if (existingGuest) {
-                alert('Dette navnet er allerede registrert. Hvis du vil endre informasjonen din, kontakt bryllupsparet.');
-                return;
+                if (confirm('Det ser ut som du allerede har sendt inn svar. Vil du redigere svaret ditt?')) {
+                    // Slett gammel registrering fra Google Sheets
+                    try {
+                        const delParams = new URLSearchParams({ action: 'delete', name: existingGuest.name });
+                        await fetch(SHEET_URL + '?' + delParams.toString(), { method: 'GET', mode: 'no-cors' });
+                    } catch (e) {
+                        console.warn('Kunne ikke slette fra Google Sheets:', e);
+                    }
+                    // Fjern fra lokal liste
+                    guests = guests.filter(g => g.name.toLowerCase() !== name.toLowerCase());
+                    localStorage.setItem('guests', JSON.stringify(guests));
+                } else {
+                    // Vis takk-melding i stedet
+                    localStorage.setItem('rsvp_name', existingGuest.name);
+                    showThankYou(existingGuest.name);
+                    return;
+                }
             }
             // Vis laste-indikator
             const submitBtn = form.querySelector('.submit-btn');
@@ -869,7 +884,7 @@ Drikke kjøpes i baren. </p>
                 nameDisplay = `${name} og ${userGuest.plusones}`;
             }
 
-            let content = `<div class="thank-you"><h2>Takk for innsendingen, ${nameDisplay}!</h2><p>Vi gleder oss til å se deg.</p>`;
+            let content = `<div class="thank-you"><h2>Takk for innsendingen, ${nameDisplay}!</h2><p>Vi gleder oss til å se ${userGuest.plusones ? 'dere' : 'deg'}.</p>`;
             content += `<button onclick="editRSVP()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; font-family: 'Montserrat', sans-serif;">Rediger mitt svar</button>`;
             content += '</div>';
             rsvpContainer.innerHTML = content;
