@@ -796,7 +796,7 @@ Drikke kjøpes i baren. </p>
                 timestamp: new Date().toISOString()
             };
 
-            // DUPLIKAT-SJEKK: Sjekk om navnet allerede finnes
+            // DUPLIKAT-SJEKK LOKALT FØRST
             let guests = JSON.parse(localStorage.getItem('guests') || '[]');
             const existingGuest = guests.find(g => g.name.toLowerCase() === name.toLowerCase());
             
@@ -827,9 +827,8 @@ Drikke kjøpes i baren. </p>
             submitBtn.style.opacity = '0.7';
 
             try {
-                // SEND TIL GOOGLE SHEETS
+                // SEND TIL GOOGLE SHEETS (uten no-cors så vi kan lese svaret)
                 try {
-                    // Bruker GET med query-params - mest pålitelig med Apps Script
                     const params = new URLSearchParams({
                         action: 'add',
                         name: formData.name,
@@ -838,10 +837,31 @@ Drikke kjøpes i baren. </p>
                         allergies: formData.allergies || '',
                         timestamp: formData.timestamp
                     });
-                    await fetch(SHEET_URL + '?' + params.toString(), {
-                        method: 'GET',
-                        mode: 'no-cors'
-                    });
+                    const response = await fetch(SHEET_URL + '?' + params.toString());
+                    const result = await response.json();
+                    
+                    // DUPLIKAT FUNNET I GOOGLE SHEETS
+                    if (result.status === 'duplicate') {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
+                        submitBtn.style.opacity = '1';
+                        if (confirm('Det ser ut som du allerede har sendt inn svar. Vil du redigere svaret ditt?')) {
+                            const delParams = new URLSearchParams({ action: 'delete', name: formData.name });
+                            await fetch(SHEET_URL + '?' + delParams.toString());
+                            // Send inn på nytt etter sletting
+                            const retryParams = new URLSearchParams({
+                                action: 'add',
+                                name: formData.name,
+                                plusones: formData.plusones || '',
+                                attending: formData.attending,
+                                allergies: formData.allergies || '',
+                                timestamp: formData.timestamp
+                            });
+                            await fetch(SHEET_URL + '?' + retryParams.toString());
+                        } else {
+                            return;
+                        }
+                    }
                 } catch (sheetError) {
                     console.warn('Google Sheets-innsending feilet, lagrer kun lokalt:', sheetError);
                 }
@@ -891,13 +911,13 @@ Drikke kjøpes i baren. </p>
         }
 
         // Function to allow user to edit their own RSVP
-        window.editRSVP = function() {
+        window.editRSVP = async function() {
             const name = localStorage.getItem('rsvp_name');
             if (confirm('Er du sikker på at du vil redigere ditt svar?')) {
                 // Slett fra Google Sheets
                 try {
                     const params = new URLSearchParams({ action: 'delete', name: name });
-                    fetch(SHEET_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
+                    await fetch(SHEET_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
                 } catch (e) {
                     console.warn('Kunne ikke slette fra Google Sheets:', e);
                 }
@@ -958,7 +978,7 @@ Drikke kjøpes i baren. </p>
         }
 
         // ADMIN-FUNKSJON: Slett gjester
-        window.deleteGuest = function(name) {
+        window.deleteGuest = async function(name) {
             if (sessionStorage.getItem('authenticated') !== 'admin') {
                 alert('Kun admin kan slette gjester');
                 return;
@@ -968,7 +988,7 @@ Drikke kjøpes i baren. </p>
                 // Slett fra Google Sheets
                 try {
                     const params = new URLSearchParams({ action: 'delete', name: name });
-                    fetch(SHEET_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
+                    await fetch(SHEET_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
                 } catch (e) {
                     console.warn('Kunne ikke slette fra Google Sheets:', e);
                 }
