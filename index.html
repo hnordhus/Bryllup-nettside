@@ -772,6 +772,17 @@ Drikke kjøpes i baren. </p>
         if (path && pages.includes(path)) {
             showPage(path);
         }
+        
+        // Håndter redirect fra 404.html
+        const redirectPath = sessionStorage.getItem('redirect_path');
+        if (redirectPath) {
+            sessionStorage.removeItem('redirect_path');
+            const redirectPage = redirectPath.substring(1);
+            if (redirectPage && pages.includes(redirectPage)) {
+                history.replaceState({page: redirectPage}, '', redirectPath);
+                showPage(redirectPage);
+            }
+        }
 
         // ===== RSVP FORM MED DUPLIKAT-SJEKK OG REDIGER-FUNKSJON =====
         const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzxMAOFaWvgyGaTdeeEOaDDwM2DcPfkBTzOaGugz021Ub-syxU8XRxNzU0eJ5IHcsOJqA/exec';
