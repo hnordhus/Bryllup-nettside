@@ -652,6 +652,7 @@ Drikke kjøpes i baren. </p>
 
         const guestPassword = 'Ingunn&Henrik2026'; // GJESTE-PASSORD - KAN SE GJESTELISTE UTEN ALLERGI
         const adminPassword = 'admin-rettigheter-2026'; // ADMIN-PASSORD - KAN SE ALLERGI OG SLETTE GJESTER
+        const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzxMAOFaWvgyGaTdeeEOaDDwM2DcPfkBTzOaGugz021Ub-syxU8XRxNzU0eJ5IHcsOJqA/exec';
         let userRole = ''; // 'guest' eller 'admin'
         
         function checkPassword() {
@@ -785,7 +786,6 @@ Drikke kjøpes i baren. </p>
         }
 
         // ===== RSVP FORM MED DUPLIKAT-SJEKK OG REDIGER-FUNKSJON =====
-        const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzxMAOFaWvgyGaTdeeEOaDDwM2DcPfkBTzOaGugz021Ub-syxU8XRxNzU0eJ5IHcsOJqA/exec';
         const form = document.getElementById('rsvp-form');
         const rsvpContainer = document.getElementById('rsvp-container');
 
@@ -925,11 +925,8 @@ Drikke kjøpes i baren. </p>
             }
         };
 
-        // GJESTELISTE MED ADMIN/GJESTE-VISNING
-        function updateGuestList() {
-            const guests = JSON.parse(localStorage.getItem('guests') || '[]');
-            const attending = guests.filter(g => g.attending === 'Ja');
-            const notAttending = guests.filter(g => g.attending === 'Nei');
+        // GJESTELISTE — HENTER FRA GOOGLE SHEETS
+        async function updateGuestList() {
             const container = document.getElementById('guest-list-container');
             const isAdmin = sessionStorage.getItem('authenticated') === 'admin';
             
@@ -937,6 +934,25 @@ Drikke kjøpes i baren. </p>
             if (exportBtn) {
                 exportBtn.style.display = isAdmin ? 'block' : 'none';
             }
+
+            // Hent gjester fra Google Sheets
+            let guests = [];
+            try {
+                const params = new URLSearchParams({ action: 'list' });
+                const response = await fetch(SHEET_URL + '?' + params.toString());
+                const result = await response.json();
+                if (result.status === 'ok' && result.guests) {
+                    guests = result.guests;
+                    // Oppdater lokal cache
+                    localStorage.setItem('guests', JSON.stringify(guests));
+                }
+            } catch (e) {
+                console.warn('Kunne ikke hente fra Google Sheets, bruker lokal cache:', e);
+                guests = JSON.parse(localStorage.getItem('guests') || '[]');
+            }
+
+            const attending = guests.filter(g => g.attending === 'Ja');
+            const notAttending = guests.filter(g => g.attending === 'Nei');
             
             if (attending.length === 0 && notAttending.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: var(--accent);">Ingen gjester har svart ennå.</p>';
