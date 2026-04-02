@@ -443,7 +443,7 @@
     </div>
     <div class="header">
         <h1>Ingunn & Henrik</h1>
-        <div class="date">12. September 2026</div>
+        <div class="date">12. september 2026</div>
         <nav class="nav">
             <a href="#" data-page="home" class="active">Hjem</a>
             <a href="#gjesteliste" data-page="gjesteliste">Gjesteliste</a>
@@ -486,6 +486,15 @@
                         <label for="allergies">Matpreferanser</label>
                         <textarea id="allergies" rows="3" placeholder="Eventuelle matallergier eller preferanser"></textarea>
                     </div>
+                    <div class="form-group">
+                        <label for="funfact">Fun fact om deg/dere</label>
+                        <textarea id="funfact" rows="2" placeholder="Fortell oss noe morsomt eller overraskende!"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="relation">Hvordan kjenner du/dere paret?</label>
+                        <textarea id="relation" rows="2" placeholder="F.eks. kollega, barndomsvenn, studiekompis..."></textarea>
+                    </div>
                     
                     <button type="submit" class="submit-btn">Send inn</button>
                 </form>
@@ -497,8 +506,9 @@
                 <div class="info-text">
                     <h3>Velkommen!</h3>
                     <h4>Fredag 11. september</h4>
-                    <p><h5>Mingling på bar:</h5> Fra 19:00 – kom og gå som du vil. 
+                    <p><h5>Mingling på Duken Pizza & Bar:</h5> Fra 18:00 – kom og gå som du vil. 
 Drikke kjøpes i baren. </p>
+<p><h5>Adresse:</h5> Seilduksgata 23, Oslo.</p>
                     <h4>Lørdag 12. september</h4>
                     <p><h5>Gjestene ankommer:</h5> 13:00</p>
                     <p><h5>Vielse:</h5> 14:00</p>
@@ -520,20 +530,23 @@ Drikke kjøpes i baren. </p>
                 <div class="info-text">
                     <h3>Praktisk informasjon</h3>
                     <h4>Toastmastere:</h4>
+                    <p> Hvis du tenker å holde tale eller komme med innsalg, vennligst ta kontakt med Anne eller Thea innen august. </p>
                     <h5>Anne Stub</h5>
                     <p>414 87 580</p>
                     <h5>Thea Thorleifsson</h5>
                     <p>976 36 030</p>
                     <h4>Dresscode:</h4>
-                    <p>Mørk dress / lang kjole</p>
-                    <h5>Sted:</h5> Nordre Skøyen Hovedgård<br>
-                    <h5>Adresse:</h5> Peter Aas vei 17, 0667 Oslo<br>
-                    <h5>Kollektivt:</h5>
+                    <p>Mørk dress</p>
+                    <h4>Sted:</h4>
+                    <p>Nordre Skøyen Hovedgård</p>
+                    <h4>Adresse:</h4>
+                    <p>Peter Aas' vei 17, 0667 Oslo</p>
+                    <h4>Kollektivt:</h4>
                     <ul class="travel-list">
                         <li>10 min å gå fra Hellerud stasjon - bane 2 &amp; 3</li>
                         <li>15 min å gå fra Høyenhall stasjon - bane 1 &amp; 4</li>
                     </ul>
-                    <h5>Parkering:</h5>
+                    <h4>Parkering:</h4>
                     <p>Tilgjengelig ved lokalet</p>
                     
                 </div>
@@ -804,6 +817,8 @@ Drikke kjøpes i baren. </p>
                 plusones: document.getElementById('plusones').value,
                 attending: document.querySelector('input[name="attending"]:checked').value,
                 allergies: document.getElementById('allergies').value,
+                funfact: document.getElementById('funfact').value,
+                relation: document.getElementById('relation').value,
                 timestamp: new Date().toISOString()
             };
 
@@ -832,6 +847,8 @@ Drikke kjøpes i baren. </p>
                         plusones: formData.plusones || '',
                         attending: formData.attending,
                         allergies: formData.allergies || '',
+                        funfact: formData.funfact || '',
+                        relation: formData.relation || '',
                         timestamp: formData.timestamp
                     });
                     const response = await fetch(SHEET_URL + '?' + params.toString());
@@ -968,6 +985,8 @@ Drikke kjøpes i baren. </p>
                     <div class="guest-item">
                         <strong>${guest.name}</strong>${guest.plusones ? ` <strong>&</strong> <strong>${guest.plusones}</strong>` : ''}
                         ${isAdmin && guest.allergies ? `<br><small style="color: var(--accent);">Allergi: ${guest.allergies}</small>` : ''}
+                        ${isAdmin && guest.funfact ? `<br><small style="color: var(--secondary);">Fun fact: ${guest.funfact}</small>` : ''}
+                        ${isAdmin && guest.relation ? `<br><small style="color: var(--dark);">Kjenner paret: ${guest.relation}</small>` : ''}
                         ${isAdmin ? `<button onclick="deleteGuest('${guest.name}')" style="float: right; background: #d32f2f; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; font-size: 0.85rem;">Slett</button>` : ''}
                     </div>
                 `).join('');
@@ -1018,9 +1037,9 @@ Drikke kjøpes i baren. </p>
             
             const guests = JSON.parse(localStorage.getItem('guests') || '[]');
             
-            let csv = '\uFEFF' + 'Navn,Partner (+1s),Kommer,Matpreferanse\n';
+            let csv = '\uFEFF' + 'Navn,Partner (+1s),Kommer,Matpreferanse,Fun fact,Kjenner paret\n';
             guests.forEach(g => {
-                csv += `"${g.name}","${g.plusones || ''}","${g.attending}","${(g.allergies || '').replace(/"/g, '""')}"\n`;
+                csv += `"${g.name}","${g.plusones || ''}","${g.attending}","${(g.allergies || '').replace(/"/g, '""')}","${(g.funfact || '').replace(/"/g, '""')}","${(g.relation || '').replace(/"/g, '""')}"\n`;
             });
             
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

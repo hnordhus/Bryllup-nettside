@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bryllupsinvitasjon — Ingunn & Henrik</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @page {
+            size: 148mm 210mm;
+            margin: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #A05858;
+            --secondary: #2E4F2E;
+            --accent: #C97C7C;
+            --light: #DCEAC7;
+            --dark: #163516;
+            --white: #FFF8F0;
+            --text: #3B3B3B;
+        }
+
+        body {
+            background: #e8e8e8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem;
+            font-family: 'Montserrat', sans-serif;
+            min-height: 100vh;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* ===== THE CARD ===== */
+        .invitation {
+            width: 148mm;
+            height: 210mm;
+            background: var(--white);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+            flex-shrink: 0;
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            body {
+                background: none !important;
+                padding: 0 !important;
+                gap: 0 !important;
+                display: block !important;
+            }
+            .invitation {
+                box-shadow: none;
+                width: 148mm;
+                height: 210mm;
+                page-break-after: always;
+                break-after: page;
+            }
+            .invitation:last-child {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+            .no-print { display: none !important; }
+        }
+
+        /* ===== DECORATIVE BORDER ===== */
+        .invitation::before {
+            content: '';
+            position: absolute;
+            inset: 8mm;
+            border: 1px solid var(--accent);
+            border-radius: 2px;
+            pointer-events: none;
+            opacity: 0.4;
+            z-index: 2;
+        }
+
+        /* ===== LAYOUT ===== */
+        .inv-content {
+            padding: 14mm 16mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 210mm;
+            position: relative;
+        }
+
+        /* ===== TOP ACCENT ===== */
+        .top-accent {
+            width: 80px;
+            height: 1px;
+            background: var(--secondary);
+            margin-bottom: 3mm;
+            opacity: 0.5;
+        }
+
+        /* ===== HEADER ===== */
+        .inv-label {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12pt;
+            letter-spacing:2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 2mm;
+        }
+
+        .inv-names {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32pt;
+            font-weight: 300;
+            color: var(--secondary);
+            text-align: center;
+            line-height: 1.1;
+            margin-bottom: 2mm;
+        }
+
+        .inv-ampersand {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 22pt;
+            font-weight: 300;
+            color: var(--accent);
+            display: block;
+            margin: 1mm 0;
+        }
+
+        .inv-date-main {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 13pt;
+            font-weight: 400;
+            color: var(--primary);
+            letter-spacing: 2px;
+            margin-top: 0mm;
+            margin-bottom: 0mm;
+        }
+
+        /* ===== DIVIDER ===== */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin:1mm 0;
+            width: 60%;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 0.5px;
+            background: var(--accent);
+            opacity: 0.5;
+        }
+
+        .divider-icon {
+            color: var(--light);
+            font-size: 10pt;
+        }
+
+        /* ===== IMAGE AREA ===== */
+        .inv-image-area {
+            width: 60%;
+            aspect-ratio: 1 / 1;
+            border-radius: 4px;
+            margin: 1mm 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .inv-image-area img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+            display: block;
+        }
+
+        /* ===== VENUE ===== */
+        .inv-venue {
+            text-align: center;
+            margin-top: 0mm;
+            margin-bottom: 0mm;
+        }
+
+        .venue-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 11pt;
+            font-weight: 500;
+            color: var(--secondary);
+            margin-bottom: 1mm;
+        }
+
+        .venue-address {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 7pt;
+            color: var(--accent);
+            letter-spacing: 1px;
+            margin-bottom: 1mm;
+        }
+
+        /* ===== RSVP + QR ===== */
+        .inv-rsvp {
+            margin-top: 0mm;
+            text-align: center;
+            padding: 3mm 0;
+        }
+
+        .rsvp-label {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 6.5pt;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1mm;
+        }
+
+        .rsvp-url {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 12pt;
+            font-weight: 400;
+            color: var(--secondary);
+            font-style: italic;
+        }
+
+        .qr-section {
+            margin-top: 0mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1mm;
+        }
+
+        #qr-code img,
+        #qr-code canvas {
+            width: 12mm !important;
+            height: 12mm !important;
+            border-radius: 2px;
+        }
+
+        .password-info {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 6.5pt;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+            margin-top: 1mm;
+        }
+
+        .password-info strong {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        /* ===== BOTTOM FLOURISH ===== */
+        .bottom-accent {
+            margin-top: auto;
+            padding-top: 2mm;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .bottom-accent span {
+            display: block;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: 0.4;
+        }
+
+        .bottom-accent span:nth-child(2) {
+            width: 5px;
+            height: 5px;
+            background: var(--secondary);
+            opacity: 0.3;
+        }
+
+        /* ===== BAKSIDE ===== */
+        .back-content {
+            position: absolute;
+            inset: 8mm;
+            overflow: hidden;
+            border-radius: 2px;
+        }
+
+        .back-content img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* ===== TOOLBAR (no-print) ===== */
+        .toolbar {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 100;
+        }
+
+        .toolbar button {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--accent);
+            background: white;
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+        }
+
+        .print-guide {
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.7rem;
+            color: var(--text);
+            line-height: 1.5;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .print-guide strong {
+            color: var(--secondary);
+        }
+
+        /* ===== ROTERT MODUS (for skjermbilde) ===== */
+        body.rotated .invitation {
+            transform: rotate(-90deg);
+            transform-origin: center center;
+            margin: calc((210mm - 148mm) / 2) 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toolbar -->
+    <div class="toolbar no-print">
+        <button onclick="window.print()">🖨 Skriv ut / PDF</button>
+        <button onclick="document.body.classList.toggle('rotated')">🔄 Roter</button>
+    </div>
+
+    <!-- Print-guide -->
+    <div class="print-guide no-print">
+        <strong>Ctrl+P:</strong> Papir → <strong>A5</strong> · Marger → <strong>Ingen</strong> · ☑ <strong>Bakgrunnsgrafikk</strong>
+    </div>
+
+    <!-- ===== SIDE 1: FORSIDE ===== -->
+    <div class="invitation">
+        <div class="inv-content">
+            
+            
+            <div class="inv-label">Bryllup</div>
+            <div class="top-accent"></div>
+
+            <div class="inv-names">
+                Ingunn
+                <span class="inv-ampersand">&</span>
+                Henrik
+            </div>
+
+            <div class="inv-date-main">12. september 2026</div>
+
+            <div class="divider">
+                <span class="divider-icon">✦</span>
+            </div>
+
+            <div class="inv-image-area">
+                <img src="images/invitasjon.jpg" alt="Illustrasjon">
+            </div>
+
+            <div class="divider">
+                <span class="divider-icon">✦</span>
+            </div>
+
+            <!-- STED -->
+            <div class="inv-venue">
+                <div class="venue-name">Nordre Skøyen Hovedgård</div>
+                <div class="venue-address">Peter Aas vei 17, Oslo</div>
+            </div>
+
+            <div class="divider" style="width: 30%;">
+                <span class="divider-icon" style="font-size: 6pt;">✦</span>
+            </div>
+
+            <!-- RSVP -->
+            <div class="inv-rsvp">
+                <div class="rsvp-label">S.U. innen 1. mai</div>
+                <div class="rsvp-url">chommie.no</div>
+            </div>
+
+            <!-- QR-KODE + PASSORD -->
+            <div class="qr-section">
+                <div id="qr-code"></div>
+                <div class="password-info">Passord: <strong>didgeridoo</strong></div>
+            </div>
+
+            <div class="bottom-accent">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===== SIDE 2: BAKSIDE ===== -->
+    <div class="invitation">
+        <div class="back-content">
+            <img src="images/bakside-duken2.png" alt="Bakside">
+        </div>
+        <!-- <div class = "venue-address" style="position: absolute; bottom: 16mm; left: 16mm; right: 16mm; text-align: center; font-family: 'Montserrat', sans-serif; font-size: 7pt; color: var(--accent); letter-spacing: 1px;">
+            Fredag fra kl 18.00</div> -->
+    </div>
+
+    <script>
+        // Generer QR-kode som peker til chommie.no
+        new QRCode(document.getElementById('qr-code'), {
+            text: 'https://chommie.no',
+            width: 200,
+            height: 200,
+            colorDark: '#2E4F2E',
+            colorLight: '#FFF8F0',
+            correctLevel: QRCode.CorrectLevel.M
+        });
+    </script>
+
+</body>
+</html>
