@@ -165,7 +165,7 @@
         .hero-image {
             width: 100%;
             /* height: 50vh; */
-            height: 75vh;
+            height: 100%;
             object-fit: cover;
             object-position: center;
             display: block;
@@ -454,7 +454,7 @@
     </div>
 
     <div id="home-page">
-        <img src="images/collage-ramme.png" alt="Bryllupsbilde" class="hero-image">
+        <img src="images/forside-collage.jpg" alt="Bryllupsbilde" class="hero-image">
         
         <div class="container">
             <div id="rsvp-container" class="rsvp-section">
@@ -486,14 +486,14 @@
                         <label for="allergies">Matpreferanser</label>
                         <textarea id="allergies" rows="3" placeholder="Eventuelle matallergier eller preferanser"></textarea>
                     </div>
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                         <label for="funfact">Fun fact om deg/dere</label>
                         <textarea id="funfact" rows="2" placeholder="Fortell oss noe morsomt eller overraskende!"></textarea>
-                    </div>
+                    </div> -->
 
                     <div class="form-group">
                         <label for="relation">Hvordan kjenner du/dere paret?</label>
-                        <textarea id="relation" rows="2" placeholder="F.eks. kollega, barndomsvenn, studiekompis..."></textarea>
+                        <textarea id="relation" rows="2" placeholder="F.eks. familie, barndomsvenn, studiekompis..."></textarea>
                     </div>
                     
                     <button type="submit" class="submit-btn">Send inn</button>
@@ -512,7 +512,7 @@ Drikke kjøpes i baren. </p>
                     <h4>Lørdag 12. september</h4>
                     <p><h5>Gjestene ankommer:</h5> 13:00</p>
                     <p><h5>Vielse:</h5> 14:00</p>
-                    <p><h5>Bobler, kake & kødding:</h5> 15:00-17:00</p>
+                    <p><h5>Krémant, kake & kødding:</h5> 15:00-17:00</p>
                     <p><h5>Middag:</h5> 17:00</p>
                     <p><h5>Fest:</h5> 22:00-02:00</p>
                     <p><h5>Nachspiel:</h5> 02:00-09:00</p>
@@ -530,11 +530,11 @@ Drikke kjøpes i baren. </p>
                 <div class="info-text">
                     <h3>Praktisk informasjon</h3>
                     <h4>Toastmastere:</h4>
-                    <p> Hvis du tenker å holde tale eller komme med innsalg, vennligst ta kontakt med Anne eller Thea innen august. </p>
                     <h5>Anne Stub</h5>
                     <p>414 87 580</p>
                     <h5>Thea Thorleifsson</h5>
-                    <p>976 36 030</p>
+                    <p>976 36 030</p> <br>
+                    <p> Har du lyst til å holde tale eller gjøre noe annet sprell i bryllupet? Send gjerne melding til Anne eller Thea innen august, så tar de det derfra. </p>
                     <h4>Dresscode:</h4>
                     <p>Mørk dress</p>
                     <h4>Sted:</h4>
@@ -817,7 +817,7 @@ Drikke kjøpes i baren. </p>
                 plusones: document.getElementById('plusones').value,
                 attending: document.querySelector('input[name="attending"]:checked').value,
                 allergies: document.getElementById('allergies').value,
-                funfact: document.getElementById('funfact').value,
+                // funfact: document.getElementById('funfact').value,
                 relation: document.getElementById('relation').value,
                 timestamp: new Date().toISOString()
             };
@@ -847,7 +847,7 @@ Drikke kjøpes i baren. </p>
                         plusones: formData.plusones || '',
                         attending: formData.attending,
                         allergies: formData.allergies || '',
-                        funfact: formData.funfact || '',
+                        // funfact: formData.funfact || '',
                         relation: formData.relation || '',
                         timestamp: formData.timestamp
                     });
@@ -985,7 +985,7 @@ Drikke kjøpes i baren. </p>
                     <div class="guest-item">
                         <strong>${guest.name}</strong>${guest.plusones ? ` <strong>&</strong> <strong>${guest.plusones}</strong>` : ''}
                         ${isAdmin && guest.allergies ? `<br><small style="color: var(--accent);">Allergi: ${guest.allergies}</small>` : ''}
-                        ${isAdmin && guest.funfact ? `<br><small style="color: var(--secondary);">Fun fact: ${guest.funfact}</small>` : ''}
+                        // ${isAdmin && guest.funfact ? `<br><small style="color: var(--secondary);">Fun fact: ${guest.funfact}</small>` : ''}
                         ${isAdmin && guest.relation ? `<br><small style="color: var(--dark);">Kjenner paret: ${guest.relation}</small>` : ''}
                         ${isAdmin ? `<button onclick="deleteGuest('${guest.name}')" style="float: right; background: #d32f2f; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; font-size: 0.85rem;">Slett</button>` : ''}
                     </div>
@@ -1039,7 +1039,7 @@ Drikke kjøpes i baren. </p>
             
             let csv = '\uFEFF' + 'Navn,Partner (+1s),Kommer,Matpreferanse,Fun fact,Kjenner paret\n';
             guests.forEach(g => {
-                csv += `"${g.name}","${g.plusones || ''}","${g.attending}","${(g.allergies || '').replace(/"/g, '""')}","${(g.funfact || '').replace(/"/g, '""')}","${(g.relation || '').replace(/"/g, '""')}"\n`;
+                csv += `"${g.name}","${g.plusones || ''}","${g.attending}","${(g.allergies || '').replace(/"/g, '""')}","${(g.relation || '').replace(/"/g, '""')}"\n`; // "${(g.funfact || '').replace(/"/g, '""')}"
             });
             
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
