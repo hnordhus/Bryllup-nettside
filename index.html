@@ -492,8 +492,8 @@
                     </div> -->
 
                     <div class="form-group">
-                        <label for="relation">Hvordan kjenner du/dere paret?</label>
-                        <textarea id="relation" rows="2" placeholder="F.eks. familie, barndomsvenn, studiekompis..."></textarea>
+                        <label for="relation">Hvordan kjenner du/dere paret? *</label>
+                        <textarea id="relation" rows="2" placeholder="F.eks. familie, barndomsvenn, studiekompis..." required></textarea>
                     </div>
                     
                     <button type="submit" class="submit-btn">Send inn</button>
@@ -985,8 +985,7 @@ Drikke kjøpes i baren. </p>
                     <div class="guest-item">
                         <strong>${guest.name}</strong>${guest.plusones ? ` <strong>&</strong> <strong>${guest.plusones}</strong>` : ''}
                         ${isAdmin && guest.allergies ? `<br><small style="color: var(--accent);">Allergi: ${guest.allergies}</small>` : ''}
-                        // ${isAdmin && guest.funfact ? `<br><small style="color: var(--secondary);">Fun fact: ${guest.funfact}</small>` : ''}
-                        ${isAdmin && guest.relation ? `<br><small style="color: var(--dark);">Kjenner paret: ${guest.relation}</small>` : ''}
+                        ${guest.relation ? `<br><small style="color: var(--dark);">Relasjon: ${guest.relation}</small>` : ''}
                         ${isAdmin ? `<button onclick="deleteGuest('${guest.name}')" style="float: right; background: #d32f2f; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; font-size: 0.85rem;">Slett</button>` : ''}
                     </div>
                 `).join('');
@@ -1004,7 +1003,8 @@ Drikke kjøpes i baren. </p>
             
             container.innerHTML = html;
         }
-
+                        // ${isAdmin && guest.funfact ? `<br><small style="color: var(--secondary);">Fun fact: ${guest.funfact}</small>` : ''}
+        
         // ADMIN-FUNKSJON: Slett gjester
         window.deleteGuest = async function(name) {
             if (sessionStorage.getItem('authenticated') !== 'admin') {
