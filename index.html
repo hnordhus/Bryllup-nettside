@@ -421,6 +421,97 @@
             display: none;
         }
 
+        /* ===== TIDSLINJE-ANIMASJON ===== */
+        .timeline {
+            position: relative;
+            padding-left: 28px;
+            margin: 1.5rem 0 0;
+        }
+
+        .timeline-bg {
+            position: absolute;
+            left: 7px;
+            top: 8px;
+            bottom: 8px;
+            width: 1.5px;
+            background: rgba(0,0,0,0.08);
+        }
+
+        .timeline-progress {
+            position: absolute;
+            left: 7px;
+            top: 8px;
+            width: 1.5px;
+            background: var(--light);
+            height: 0;
+            transition: height 0.5s ease;
+        }
+
+        .tl-event {
+            position: relative;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            opacity: 0.2;
+            transform: translateY(8px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .tl-event:last-child {
+            margin-bottom: 0;
+        }
+
+        .tl-event.tl-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tl-dot {
+            position: absolute;
+            left: -24px;
+            top: 5px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1.5px solid #ccc;
+            background: var(--white);
+            z-index: 1;
+            transition: all 0.35s ease;
+        }
+
+        .tl-event.tl-visible .tl-dot {
+            border-color: var(--primary);
+        }
+
+        .tl-event.tl-active .tl-dot {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 5px rgba(160,88,88,0.12);
+        }
+
+        .tl-time {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--secondary);
+            min-width: 70px;
+            padding-top: 1px;
+        }
+
+        .tl-details h5 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.15rem;
+            font-weight: 500;
+            color: var(--secondary);
+            margin: 0;
+        }
+
+        .tl-details p {
+            font-size: 0.8rem;
+            color: var(--accent);
+            margin: 2px 0 0;
+        }
+
         
     </style>
 </head>
@@ -506,16 +597,55 @@
                 <div class="info-text">
                     <h3>Velkommen!</h3>
                     <h4>Fredag 11. september</h4>
-                    <p><h5>Mingling på Duken Pizza & Bar:</h5> Fra 18:00 – kom og gå som du vil. 
-Drikke kjøpes i baren. </p>
-<p><h5>Adresse:</h5> Seilduksgata 23, Oslo.</p>
-                    <h4>Lørdag 12. september</h4>
-                    <p><h5>Gjestene ankommer:</h5> 13:00</p>
-                    <p><h5>Vielse:</h5> 14:00</p>
-                    <p><h5>Krémant, kake & kødding:</h5> 15:00-17:00</p>
-                    <p><h5>Middag:</h5> 17:00</p>
-                    <p><h5>Fest:</h5> 22:00-02:00</p>
-                    <p><h5>Nachspiel:</h5> 02:00-09:00</p>
+                    <div class="timeline" id="tl-friday">
+                        <div class="timeline-bg"></div>
+                        <div class="timeline-progress" id="tp-friday"></div>
+                        <div class="tl-event" data-tl="friday">
+                            <div class="tl-dot"></div>
+                            <div class="tl-time">18:00</div>
+                            <div class="tl-details">
+                                <h5>Mingling på Duken Pizza & Bar</h5>
+                                <p>Kom og gå som du vil. Drikke kjøpes i baren.</p>
+                                <p>Seilduksgata 23, Oslo.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 1.5rem;">Lørdag 12. september</h4>
+                    <div class="timeline" id="tl-saturday">
+                        <div class="timeline-bg"></div>
+                        <div class="timeline-progress" id="tp-saturday"></div>
+                        <div class="tl-event" data-tl="saturday">
+                            <div class="tl-dot"></div>
+                            <div class="tl-time">12:30</div>
+                            <div class="tl-details"><h5>Gjestene ankommer</h5></div>
+                        </div>
+                        <div class="tl-event" data-tl="saturday">
+                            <div class="tl-dot"></div>
+                            <div class="tl-time">13:00</div>
+                            <div class="tl-details"><h5>Vielse</h5></div>
+                        </div>
+                        <div class="tl-event" data-tl="saturday">
+                            <div class="tl-dot"></div>
+                            <div class="tl-time">14:00</div>
+                            <div class="tl-details"><h5>Krémant, kake & kødding</h5></div>
+                        </div>
+                        <div class="tl-event" data-tl="saturday">
+                            <div class="tl-dot"></div>
+                            <div class="tl-time">16:00</div>
+                            <div class="tl-details"><h5>Middag</h5></div>
+                        </div>
+                        <div class="tl-event" data-tl="saturday">
+                            <div class="tl-dot"></div>
+                            <div class="tl-time">22:00</div>
+                            <div class="tl-details"><h5>Fest</h5></div>
+                        </div>
+                        <div class="tl-event" data-tl="saturday">
+                            <div class="tl-dot"></div>
+                            <div class="tl-time">02:00–09:00</div>
+                            <div class="tl-details"><h5>Nachspiel</h5></div>
+                        </div>
+                    </div>
                     
                 </div>
                 
@@ -536,7 +666,7 @@ Drikke kjøpes i baren. </p>
                     <p>976 36 030</p> <br>
                     <p> Har du lyst til å holde tale eller gjøre noe annet sprell i bryllupet? Send gjerne melding til Anne eller Thea innen august, så tar de det derfra. </p>
                     <h4>Dresscode:</h4>
-                    <p>Mørk dress</p>
+                    <p>Smoking/Mørk dress</p>
                     <h4>Sted:</h4>
                     <p>Nordre Skøyen Hovedgård</p>
                     <h4>Adresse:</h4>
@@ -677,12 +807,14 @@ Drikke kjøpes i baren. </p>
                 userRole = 'admin';
                 sessionStorage.setItem('authenticated', 'admin');
                 overlay.style.display = 'none';
+                window.scrollTo(0, 0);
                 updateRoleDisplay();
                 updateGuestList();
             } else if (input === guestPassword) {
                 userRole = 'guest';
                 sessionStorage.setItem('authenticated', 'guest');
                 overlay.style.display = 'none';
+                window.scrollTo(0, 0);
                 updateRoleDisplay();
                 updateGuestList();
             } else {
@@ -1068,6 +1200,74 @@ Drikke kjøpes i baren. </p>
         }
         updateRoleDisplay();
         updateGuestList();
+
+        // ===== TIDSLINJE SCROLL-ANIMASJON =====
+        (function() {
+            var events = document.querySelectorAll('.tl-event');
+            var lastActive = null;
+
+            function updateProgress(el) {
+                var tlId = el.dataset.tl;
+                var tl = document.getElementById('tl-' + tlId);
+                var prog = document.getElementById('tp-' + tlId);
+                if (!tl || !prog) return;
+                var tlRect = tl.getBoundingClientRect();
+                var dotRect = el.querySelector('.tl-dot').getBoundingClientRect();
+                prog.style.height = Math.max(0, dotRect.top - tlRect.top + 6) + 'px';
+            }
+
+            // Fade-in: trigger tidlig så man ser innholdet i god tid
+            var fadeObserver = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('tl-visible');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px 200px 0px' });
+
+            events.forEach(function(ev) { fadeObserver.observe(ev); });
+
+            // Aktiv prikk: følger midten av viewporten
+            function onScroll() {
+                var mid = window.innerHeight / 2;
+                var closest = null;
+                var closestDist = Infinity;
+
+                events.forEach(function(ev) {
+                    if (!ev.classList.contains('tl-visible')) return;
+                    var dot = ev.querySelector('.tl-dot');
+                    var rect = dot.getBoundingClientRect();
+                    var dotMid = rect.top + rect.height / 2;
+                    // Velg eventet nærmest midten, men som allerede har passert toppen
+                    var dist = Math.abs(dotMid - mid);
+                    if (dotMid <= mid + 80 && dist < closestDist) {
+                        closestDist = dist;
+                        closest = ev;
+                    }
+                });
+
+                // Fallback: hvis ingen er over midten ennå, velg første synlige
+                if (!closest) {
+                    for (var i = 0; i < events.length; i++) {
+                        if (events[i].classList.contains('tl-visible')) {
+                            closest = events[i];
+                            break;
+                        }
+                    }
+                }
+
+                if (closest && closest !== lastActive) {
+                    if (lastActive) lastActive.classList.remove('tl-active');
+                    closest.classList.add('tl-active');
+                    lastActive = closest;
+                    updateProgress(closest);
+                }
+            }
+
+            window.addEventListener('scroll', onScroll, { passive: true });
+            // Kjør én gang ved lasting
+            setTimeout(onScroll, 300);
+        })();
     </script>
 </body>
 </html>
