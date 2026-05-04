@@ -1108,8 +1108,9 @@
                 return;
             }
             
-            let html = '<h3 style="color: var(--secondary); margin-bottom: 1rem; font-family: Cormorant Garamond, serif;">Kommer (' + attending.length + ')</h3>';
-            
+            const attendingCount = attending.reduce((sum, g) => sum + 1 + (g.plusones ? 1 : 0), 0);
+            let html = '<h3 style="color: var(--secondary); margin-bottom: 1rem; font-family: Cormorant Garamond, serif;">Kommer (' + attendingCount + ')</h3>';
+                        
             if (attending.length === 0) {
                 html += '<p style="color: var(--accent); margin-bottom: 1rem;">Ingen har bekreftet ennå.</p>';
             } else {
