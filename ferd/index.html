@@ -178,6 +178,65 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 .fog-canvas{pointer-events:none}
 .leaflet-control-scale-line{font-family:var(--mono)!important;font-size:10px!important}
 .leaflet-popup-content{font-family:var(--font);font-size:13px;line-height:1.5}
+
+/* ---- route planning + navigation ---- */
+.plan{position:absolute;bottom:0;left:0;right:0;z-index:700;background:var(--bg);
+  border-radius:20px 20px 0 0;padding:14px 16px 18px;box-shadow:var(--sh-up);
+  max-height:68%;overflow-y:auto;display:none}
+.plan.on{display:block}
+.plan-h{display:flex;align-items:center;margin-bottom:12px}
+.plan-h b{font-size:16px;font-weight:700;color:var(--navy);flex:1}
+.hint{font-size:12px;color:var(--muted);text-align:center;margin:9px 0}
+.alt{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:10px 11px;margin-bottom:7px;cursor:pointer}
+.alt.on{border-color:var(--blue);background:rgba(42,117,199,.07)}
+.alt .sw{width:4px;height:38px;border-radius:2px;flex-shrink:0}
+.alt .b{flex:1;min-width:0}
+.alt .b b{display:block;font-family:var(--mono);font-size:14px;font-weight:600}
+.alt .b small{display:block;font-size:11px;color:var(--text-2);margin-top:2px}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--blue);color:#fff;letter-spacing:.3px}
+.tag.g{background:var(--green-dark)} .tag.n{background:#64748b}
+.mini{padding:11px 13px;border-radius:11px;border:1px solid var(--border);background:var(--card);
+  font:500 14px var(--font);color:var(--text);cursor:pointer}
+
+/* Ferd mode switch */
+.modes{display:flex;background:var(--border-light);border-radius:11px;padding:3px;margin-bottom:11px}
+.modes button{flex:1;padding:9px;border:none;background:none;border-radius:9px;
+  font:500 13px var(--font);color:var(--text-2);cursor:pointer}
+.modes button.on{background:var(--card);color:var(--blue);font-weight:600;box-shadow:var(--sh-sm)}
+.rsel{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--border);
+  border-radius:11px;padding:10px;margin-bottom:11px;font-size:13px}
+.rsel b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+
+/* nav card */
+.navcard{position:absolute;top:calc(env(safe-area-inset-top,0px) + 96px);left:10px;right:10px;z-index:650;
+  background:rgba(15,23,42,.93);backdrop-filter:blur(12px);color:#fff;border-radius:16px;
+  padding:13px 15px;display:none;box-shadow:var(--sh-md)}
+.navcard.on{display:block}
+.nav-top{display:flex;align-items:center;gap:13px}
+.nav-top .ar{font-size:30px;line-height:1;width:38px;text-align:center;flex-shrink:0}
+.nav-top .tx{flex:1;min-width:0}
+.nav-top .tx b{display:block;font-family:var(--mono);font-size:21px;font-weight:600;line-height:1.15}
+.nav-top .tx small{display:block;font-size:12px;opacity:.82;margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;opacity:.75;margin-top:9px}
+.nav-bar{height:3px;background:rgba(255,255,255,.22);border-radius:2px;overflow:hidden;margin-top:5px}
+.nav-bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--blue-light),var(--green));
+  border-radius:2px;transition:width .6s}
+.offroute{color:#fca5a5!important}
+.viewtog{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);right:10px;z-index:660;display:none}
+.viewtog.on{display:block}
+
+/* ORS key field */
+.keyrow{display:flex;gap:7px;margin-top:8px}
+.keyrow input{flex:1;padding:11px;border:1px solid var(--border);border-radius:11px;
+  font:400 13px var(--mono);color:var(--text);background:var(--card);outline:none;min-width:0}
+.keyrow input:focus{border-color:var(--blue)}
+.keyrow button{padding:11px 15px;border:none;border-radius:11px;background:var(--blue);color:#fff;
+  font:600 13px var(--font);cursor:pointer}
+.keyhelp{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.55}
+.keyhelp a{color:var(--blue)}
 </style>
 </head>
 <body>
@@ -188,10 +247,25 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
   <div class="map-btns">
     <button id="b-fog" class="mbtn" onclick="toggleFog()">◌ Tåke</button>
     <button class="mbtn" onclick="locateMe()">⊕ Posisjon</button>
+    <button id="b-plan" class="mbtn" onclick="openPlan()">🧭 Planlegg</button>
   </div>
   <div id="map-note" class="map-note" style="display:none">
     <p>Ingen turer ennå</p>
     <small>Gå til <b>På Ferd</b> og start din første tur</small>
+  </div>
+  <div id="plan" class="plan">
+    <div class="plan-h"><b>Planlegg rute</b><button class="x" style="font-size:19px" onclick="closePlan()">✕</button></div>
+    <div class="chips" id="prof-chips"></div>
+    <div id="plan-hint" class="hint">Trykk på kartet for å sette start og mål</div>
+    <div id="alts"></div>
+    <div class="row-btns">
+      <button class="mini" onclick="undoWp()">↶</button>
+      <button class="mini" onclick="clearWp()">🗑</button>
+      <button class="big start" id="calc-btn" style="flex:1" onclick="calcRoute()">Beregn rute</button>
+    </div>
+    <button class="wide" id="save-route" style="display:none;border-color:var(--green);color:var(--green-dark);font-weight:600" onclick="saveRoute()">💾 Lagre rute</button>
+    <h2 class="section" id="sr-title" style="display:none">Lagrede ruter</h2>
+    <div id="saved-routes"></div>
   </div>
 </section>
 
@@ -205,7 +279,22 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
   </div>
   <div id="paused" class="paused-tag">⏸ Pauset</div>
 
+  <div id="navcard" class="navcard">
+    <div class="nav-top">
+      <div class="ar" id="nav-ar">▲</div>
+      <div class="tx"><b id="nav-d">–</b><small id="nav-t">Følger ruten</small></div>
+    </div>
+    <div class="nav-meta"><span id="nav-rem">–</span><span id="nav-eta">–</span></div>
+    <div class="nav-bar"><i id="nav-bar" style="width:0%"></i></div>
+  </div>
+  <div id="viewtog" class="viewtog"><button class="mbtn" onclick="toggleNavView()">🧭 POV</button></div>
+
   <div class="panel">
+    <div class="modes" id="ferd-modes">
+      <button id="m-fri" class="on" onclick="setFerdMode('fri')">Fri ferd</button>
+      <button id="m-rute" onclick="setFerdMode('rute')">Følg rute</button>
+    </div>
+    <div id="rsel-wrap"></div>
     <div id="chips" class="chips">
       <button class="chip on" data-t="Walk" onclick="setType('Walk')">🚶 Gange</button>
       <button class="chip" data-t="Run" onclick="setType('Run')">🏃 Løping</button>
@@ -213,7 +302,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
       <button class="chip" data-t="Ride" onclick="setType('Ride')">🚴 Sykkel</button>
     </div>
     <div id="gps" class="gps"></div>
-    <button id="b-start" class="big start" onclick="startTrack()">▶ Start På Ferd</button>
+    <button id="b-start" class="big start" onclick="startTrack()">▶ Start Ferd</button>
     <div id="stop-row" class="row-btns" style="display:none">
       <button class="btn-ghost" style="flex:0 0 auto;padding:12px 16px" onclick="openPlaceModal()">📍 Sted</button>
       <button class="big stop" onclick="stopTrack()">■ Stopp og lagre</button>
@@ -272,6 +361,14 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
     <div class="srow"><span>Enheter</span><span>Metrisk (km)</span></div>
     <div class="srow"><span>Datalagring</span><span>Kun på denne enheten</span></div>
     <div class="srow"><span>Hold skjermen på</span><span id="p-wake">Automatisk</span></div>
+
+    <h2 class="section">Ruteplanlegging</h2>
+    <div class="keyrow">
+      <input type="text" id="ors-key" placeholder="Lim inn ORS-nøkkel" autocomplete="off" spellcheck="false">
+      <button onclick="saveKey()">Lagre</button>
+    </div>
+    <p class="keyhelp">Gratis nøkkel fra <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">openrouteservice.org</a>.
+      Den lagres kun på denne telefonen og ligger aldri i filen på nettet.</p>
 
     <h2 class="section">Sikkerhetskopi</h2>
     <button class="wide" onclick="exportAll()">⬇ Eksporter alt (JSON)</button>
@@ -348,6 +445,7 @@ const typeLabel = t => (TYPES[t] || {}).label || t;
 
 /* ---------- Storage ---------- */
 const K_TRACKS = 'ferd_tracks', K_PLACES = 'ferd_places', K_UNLOCK = 'ferd_unlocked';
+const K_ROUTES = 'ferd_routes', K_SET = 'ferd_settings';
 
 const DB = {
   read(key, fallback) {
@@ -376,7 +474,12 @@ const DB = {
     if (i >= 0) { a[i] = p; this.write(K_PLACES, a); }
   },
   setUnlocked(u) { this.write(K_UNLOCK, u); },
-  wipe() { [K_TRACKS, K_PLACES, K_UNLOCK].forEach(k => localStorage.removeItem(k)); },
+  routes() { return this.read(K_ROUTES, []); },
+  addRoute(r) { const a = this.read(K_ROUTES, []); a.push(r); return this.write(K_ROUTES, a); },
+  delRoute(id) { this.write(K_ROUTES, this.read(K_ROUTES, []).filter(r => r.id !== id)); },
+  settings() { return this.read(K_SET, {}); },
+  setSettings(o) { this.write(K_SET, Object.assign(this.settings(), o)); },
+  wipe() { [K_TRACKS, K_PLACES, K_UNLOCK, K_ROUTES].forEach(k => localStorage.removeItem(k)); },
 };
 
 /* ---------- Utils ---------- */
@@ -573,6 +676,9 @@ function initMap() {
   L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
   trackLayer = L.layerGroup().addTo(map);
   placeLayer = L.layerGroup().addTo(map);
+  wpLayer = L.layerGroup().addTo(map);
+  altLayer = L.layerGroup().addTo(map);
+  map.on('click', onMapTap);
   drawMap();
 }
 
@@ -740,6 +846,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function startTrack() {
+  if (ferdMode === 'rute' && !navRoute) return toast('Velg en rute først');
   if (!navigator.geolocation) return toast('Stedstjenester støttes ikke i denne nettleseren');
 
   coords = []; dist = 0; movingMs = 0; curSpeed = 0;
@@ -751,6 +858,12 @@ function startTrack() {
   document.getElementById('stop-row').style.display = 'flex';
   document.getElementById('chips').style.display = 'none';
   document.getElementById('live').classList.add('on');
+  document.getElementById('ferd-modes').style.display = 'none';
+  if (navRoute) {
+    navIdx = 0;
+    document.getElementById('navcard').classList.add('on');
+    document.getElementById('viewtog').classList.add('on');
+  }
   gps('Venter på GPS…', '');
 
   if (tLine) tmap.removeLayer(tLine);
@@ -799,9 +912,11 @@ function onFix(pos) {
   tLine.setLatLngs(coords);
   if (tMarker) tmap.removeLayer(tMarker);
   tMarker = L.circleMarker(pt, { radius: 7, color: '#fff', weight: 3, fillColor: typeColor(type), fillOpacity: 1 }).addTo(tmap);
-  tmap.setView(pt, tmap.getZoom());
+  if (!navRoute) tmap.setView(pt, tmap.getZoom());
+  else if (navView === 'pov') tmap.setView(pt, Math.max(tmap.getZoom(), 17));
 
   checkNearbyPlaces(lat, lng);
+  if (navRoute) updateNav(lat, lng);
 }
 
 /* auto check-in when passing a saved place */
@@ -882,10 +997,393 @@ function stopTrack() {
   document.getElementById('stop-row').style.display = 'none';
   document.getElementById('chips').style.display = 'flex';
   document.getElementById('live').classList.remove('on');
+  document.getElementById('ferd-modes').style.display = 'flex';
+  document.getElementById('navcard').classList.remove('on');
+  document.getElementById('viewtog').classList.remove('on');
   document.getElementById('paused').classList.remove('on');
   gps('', '');
   if (tMarker) { tmap.removeLayer(tMarker); tMarker = null; }
   drawMap();
+}
+
+/* ═══════════ ROUTE PLANNING (OpenRouteService) ═══════════ */
+const PROFILES = {
+  'foot-walking':     { label: '🚶 Gange/løp', type: 'Walk' },
+  'foot-hiking':      { label: '🥾 Fjelltur',  type: 'Hike' },
+  'cycling-road':     { label: '🚴 Landevei',  type: 'Ride' },
+  'cycling-mountain': { label: '🚵 Terreng',   type: 'Ride' },
+};
+/* ORS instruction type -> Norwegian text + arrow (numeric, so language-independent) */
+const TURN = {
+  0:['Sving til venstre','↰'], 1:['Sving til høyre','↱'],
+  2:['Skarp venstre','↰'],     3:['Skarp høyre','↱'],
+  4:['Svak venstre','↖'],      5:['Svak høyre','↗'],
+  6:['Fortsett rett fram','↑'],
+  7:['Inn i rundkjøring','⟳'], 8:['Ut av rundkjøring','⟳'],
+  9:['Snu','↩'],  10:['Du er fremme','⚑'], 11:['Start','▲'],
+  12:['Hold til venstre','↖'], 13:['Hold til høyre','↗'],
+};
+/* what counts as a real junction turn, for the "fewest turns" ranking */
+const REAL_TURNS = new Set([0, 1, 2, 3, 7, 9]);
+const ALT_COLORS = ['#2A75C7', '#7c3aed', '#d97706'];
+
+let planOn = false, profile = 'foot-walking';
+let wps = [], wpLayer = null, altLayer = null;
+let alts = [], altPick = 0;
+
+/** Call ORS. Returns an array of parsed routes (one per alternative). */
+async function orsRoute(prof, waypoints, wantAlts) {
+  const key = (DB.settings().orsKey || '').trim();
+  if (!key) throw new Error('Mangler ORS-nøkkel — legg den inn under Min Ferd → Ruteplanlegging');
+
+  const body = {
+    coordinates: waypoints.map(w => [w[1], w[0]]),   // ORS expects [lng, lat]
+    instructions: true,
+    elevation: true,
+  };
+  // ORS only supports alternatives for a plain start->end pair
+  if (wantAlts && waypoints.length === 2) {
+    body.alternative_routes = { target_count: 3, weight_factor: 1.6, share_factor: 0.6 };
+  }
+
+  let res;
+  try {
+    res = await fetch('https://api.openrouteservice.org/v2/directions/' + prof + '/geojson', {
+      method: 'POST',
+      headers: { 'Authorization': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch (e) { throw new Error('Ingen nettforbindelse'); }
+
+  if (!res.ok) {
+    let msg = 'Ruting feilet (' + res.status + ')';
+    if (res.status === 401 || res.status === 403) msg = 'Nøkkelen ble avvist — sjekk at den er riktig';
+    else if (res.status === 429) msg = 'Dagskvoten er brukt opp — prøv igjen i morgen';
+    else if (res.status === 404) msg = 'Fant ingen vei mellom punktene';
+    try {
+      const j = await res.json();
+      const m = j && j.error && (j.error.message || j.error);
+      if (m && typeof m === 'string') msg += ' · ' + m;
+    } catch (e) {}
+    throw new Error(msg);
+  }
+
+  const data = await res.json();
+  if (!data.features || !data.features.length) throw new Error('Fant ingen rute mellom punktene');
+  return data.features.map(parseFeature);
+}
+
+function parseFeature(f) {
+  const coords = (f.geometry.coordinates || []).map(c => [c[1], c[0]]);
+  const p = f.properties || {}, sum = p.summary || {};
+  const steps = [];
+  for (const seg of (p.segments || []))
+    for (const st of (seg.steps || []))
+      steps.push({
+        type: st.type,
+        name: (st.name && st.name !== '-') ? st.name : '',
+        distance: st.distance || 0,
+        wp: st.way_points || [0, 0],
+      });
+  return {
+    coords, steps,
+    distance: sum.distance || 0,
+    duration: sum.duration || 0,
+    ascent: Math.round(p.ascent || 0),
+    turns: steps.filter(x => REAL_TURNS.has(x.type)).length,
+  };
+}
+
+/** Tag alternatives: fastest / fewest turns / shortest. */
+function labelAlts(list) {
+  if (!list.length) return;
+  const minDur = Math.min(...list.map(r => r.duration));
+  const minTurn = Math.min(...list.map(r => r.turns));
+  const minDist = Math.min(...list.map(r => r.distance));
+  list.forEach(r => {
+    r.tags = [];
+    if (r.duration === minDur) r.tags.push(['Raskest', '']);
+    if (r.turns === minTurn && list.length > 1) r.tags.push(['Færrest svinger', 'g']);
+    if (r.distance === minDist && r.duration !== minDur) r.tags.push(['Kortest', 'n']);
+  });
+}
+
+/* ---- planning UI ---- */
+function openPlan() {
+  planOn = true;
+  document.getElementById('plan').classList.add('on');
+  document.getElementById('b-plan').classList.add('on');
+  renderProfChips(); renderSavedRoutes(); updatePlanHint();
+}
+function closePlan() {
+  planOn = false;
+  document.getElementById('plan').classList.remove('on');
+  document.getElementById('b-plan').classList.remove('on');
+}
+function renderProfChips() {
+  const el = document.getElementById('prof-chips');
+  if (!el) return;
+  el.innerHTML = Object.entries(PROFILES).map(([k, v]) =>
+    `<button class="chip ${k === profile ? 'on' : ''}" onclick="setProfile('${k}')">${v.label}</button>`).join('');
+}
+function setProfile(k) { profile = k; renderProfChips(); clearAlts(); }
+
+function onMapTap(e) {
+  if (!planOn) return;
+  wps.push([e.latlng.lat, e.latlng.lng]);
+  clearAlts(); drawWps(); updatePlanHint();
+}
+function drawWps() {
+  if (!wpLayer) return;
+  wpLayer.clearLayers();
+  wps.forEach((w, i) => {
+    const first = i === 0, last = i === wps.length - 1 && wps.length > 1;
+    const bg = first ? '#4CAF50' : last ? '#ef4444' : '#fff';
+    const fg = (first || last) ? '#fff' : '#1e293b';
+    const txt = first ? 'A' : last ? 'B' : String(i);
+    L.marker(w, { icon: L.divIcon({ className: '',
+      html: `<div class="place-pin" style="width:26px;height:26px;font-size:12px;font-weight:700;background:${bg};color:${fg}">${txt}</div>`,
+      iconSize: [26, 26], iconAnchor: [13, 13] }) }).addTo(wpLayer);
+  });
+}
+function updatePlanHint() {
+  const h = document.getElementById('plan-hint');
+  if (!h) return;
+  if (!wps.length) h.textContent = 'Trykk på kartet for å sette start og mål';
+  else if (wps.length === 1) h.textContent = 'Sett målet — trykk én gang til';
+  else h.textContent = wps.length + ' punkter' + (wps.length > 2 ? ' · alternativer vises kun ved 2 punkter' : '');
+}
+function undoWp() { wps.pop(); clearAlts(); drawWps(); updatePlanHint(); }
+function clearWp() { wps = []; clearAlts(); drawWps(); updatePlanHint(); }
+function clearAlts() {
+  alts = []; altPick = 0;
+  if (altLayer) altLayer.clearLayers();
+  const a = document.getElementById('alts'); if (a) a.innerHTML = '';
+  const b = document.getElementById('save-route'); if (b) b.style.display = 'none';
+}
+
+async function calcRoute() {
+  if (wps.length < 2) return toast('Sett minst to punkter på kartet');
+  const btn = document.getElementById('calc-btn');
+  btn.disabled = true; btn.textContent = 'Beregner…';
+  try {
+    alts = await orsRoute(profile, wps, true);
+    labelAlts(alts);
+    altPick = 0;
+    renderAlts(); drawAlts();
+    document.getElementById('save-route').style.display = 'block';
+  } catch (e) {
+    toast(e.message, 5200);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Beregn rute';
+  }
+}
+
+function renderAlts() {
+  document.getElementById('alts').innerHTML = alts.map((r, i) => `
+    <div class="alt ${i === altPick ? 'on' : ''}" onclick="pickAlt(${i})">
+      <div class="sw" style="background:${ALT_COLORS[i % 3]}"></div>
+      <div class="b">
+        <b>${(r.distance / 1000).toFixed(1)} km · ${fmtTimeShort(r.duration)}</b>
+        <small>${r.turns} svinger${r.ascent ? ' · ' + r.ascent + ' hm stigning' : ''}</small>
+        <div class="tags">${(r.tags || []).map(t => `<span class="tag ${t[1]}">${t[0]}</span>`).join('')}</div>
+      </div>
+    </div>`).join('');
+}
+function pickAlt(i) { altPick = i; renderAlts(); drawAlts(); }
+function drawAlts() {
+  if (!altLayer) return;
+  altLayer.clearLayers();
+  alts.forEach((r, i) => {
+    L.polyline(r.coords, {
+      color: ALT_COLORS[i % 3],
+      weight: i === altPick ? 6 : 3,
+      opacity: i === altPick ? .95 : .4,
+      smoothFactor: 1,
+    }).addTo(altLayer);
+  });
+  if (alts[altPick] && alts[altPick].coords.length)
+    map.fitBounds(L.latLngBounds(alts[altPick].coords).pad(.15));
+}
+
+function saveRoute() {
+  const r = alts[altPick];
+  if (!r) return;
+  const suggested = PROFILES[profile].label.replace(/^\S+\s/, '') + ' ' + (r.distance / 1000).toFixed(1) + ' km';
+  const name = (prompt('Navn på ruten:', suggested) || '').trim();
+  if (!name) return;
+  DB.addRoute({
+    id: String(Date.now()), name, profile,
+    waypoints: wps.slice(), coords: r.coords, steps: r.steps,
+    distance: r.distance, duration: r.duration, ascent: r.ascent, turns: r.turns,
+    created: new Date().toISOString(),
+  });
+  toast('Rute lagret');
+  renderSavedRoutes(); renderRouteSelect();
+}
+
+function renderSavedRoutes() {
+  const rs = DB.routes();
+  const t = document.getElementById('sr-title');
+  if (t) t.style.display = rs.length ? 'block' : 'none';
+  const el = document.getElementById('saved-routes');
+  if (!el) return;
+  el.innerHTML = rs.map(r => `
+    <div class="item">
+      <div class="ic" style="background:rgba(42,117,199,.1)">🧭</div>
+      <div class="body"><b>${escapeHtml(r.name)}</b>
+        <small>${(r.distance / 1000).toFixed(1)} km · ${r.turns} svinger · ${fmtTimeShort(r.duration)}</small></div>
+      <button class="checkin" onclick="showRoute('${r.id}')">Vis</button>
+      <button class="x" onclick="delRoute('${r.id}')">✕</button>
+    </div>`).join('');
+}
+function showRoute(id) {
+  const r = DB.routes().find(x => x.id === id);
+  if (!r || !altLayer) return;
+  altLayer.clearLayers(); wpLayer.clearLayers();
+  L.polyline(r.coords, { color: '#2A75C7', weight: 5, opacity: .9 }).addTo(altLayer);
+  map.fitBounds(L.latLngBounds(r.coords).pad(.15));
+  closePlan();
+}
+function delRoute(id) {
+  const r = DB.routes().find(x => x.id === id);
+  if (!r || !confirm('Slette "' + r.name + '"?')) return;
+  DB.delRoute(id);
+  if (navRoute && navRoute.id === id) { navRoute = null; setFerdMode('fri'); }
+  renderSavedRoutes(); renderRouteSelect();
+}
+
+/* ═══════════ NAVIGATION ═══════════ */
+let ferdMode = 'fri', navRoute = null, navCum = [], navIdx = 0, navView = 'pov', navLine = null;
+
+function setFerdMode(m) {
+  if (active) return;
+  ferdMode = m;
+  document.getElementById('m-fri').classList.toggle('on', m === 'fri');
+  document.getElementById('m-rute').classList.toggle('on', m === 'rute');
+  if (m === 'fri') {
+    navRoute = null;
+    if (navLine && tmap) { tmap.removeLayer(navLine); navLine = null; }
+  }
+  renderRouteSelect();
+}
+
+function renderRouteSelect() {
+  const wrap = document.getElementById('rsel-wrap');
+  if (!wrap) return;
+  if (ferdMode !== 'rute') { wrap.innerHTML = ''; return; }
+  const rs = DB.routes();
+  if (!rs.length) {
+    wrap.innerHTML = '<div class="rsel"><b style="font-weight:400;color:var(--muted)">Ingen lagrede ruter — planlegg én i Kart</b></div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="rsel"><span>🧭</span><b>' +
+    (navRoute ? escapeHtml(navRoute.name) : 'Velg rute') +
+    '</b><button class="checkin" onclick="pickRoutePrompt()">' +
+    (navRoute ? 'Bytt' : 'Velg') + '</button></div>';
+}
+
+function pickRoutePrompt() {
+  const rs = DB.routes();
+  const list = rs.map((r, i) => (i + 1) + '. ' + r.name + ' (' + (r.distance / 1000).toFixed(1) + ' km)').join('\n');
+  const pick = prompt('Velg rute:\n\n' + list, '1');
+  const i = parseInt(pick, 10) - 1;
+  if (isNaN(i) || i < 0 || i >= rs.length) return;
+  useRoute(rs[i]);
+}
+
+function useRoute(r) {
+  navRoute = r;
+  navCum = cumulative(r.coords);
+  navIdx = 0;
+  setType((PROFILES[r.profile] || {}).type || 'Walk');
+  if (tmap) {
+    if (navLine) tmap.removeLayer(navLine);
+    navLine = L.polyline(r.coords, { color: '#2A75C7', weight: 5, opacity: .55, dashArray: '9,7' }).addTo(tmap);
+    tmap.fitBounds(L.latLngBounds(r.coords).pad(.15));
+  }
+  renderRouteSelect();
+  toast(r.name + ' · ' + r.turns + ' svinger');
+}
+
+function cumulative(cs) {
+  const out = [0];
+  for (let i = 1; i < cs.length; i++)
+    out.push(out[i - 1] + haversine(cs[i - 1][0], cs[i - 1][1], cs[i][0], cs[i][1]));
+  return out;
+}
+
+/** Nearest index on the route. Searches a window around the last match for speed. */
+function nearestOnRoute(lat, lng) {
+  const cs = navRoute.coords;
+  const lo = Math.max(0, navIdx - 40), hi = Math.min(cs.length, navIdx + 260);
+  let best = navIdx, bd = Infinity;
+  for (let i = lo; i < hi; i++) {
+    const d = haversine(lat, lng, cs[i][0], cs[i][1]);
+    if (d < bd) { bd = d; best = i; }
+  }
+  if (bd > 120) {                        // lost the thread — full rescan
+    for (let i = 0; i < cs.length; i++) {
+      const d = haversine(lat, lng, cs[i][0], cs[i][1]);
+      if (d < bd) { bd = d; best = i; }
+    }
+  }
+  return { idx: best, off: bd };
+}
+
+function toggleNavView() {
+  navView = navView === 'pov' ? 'oversikt' : 'pov';
+  const b = document.querySelector('#viewtog button');
+  if (b) b.textContent = navView === 'pov' ? '🧭 POV' : '🗺️ Oversikt';
+  if (navView === 'oversikt' && navRoute && tmap)
+    tmap.fitBounds(L.latLngBounds(navRoute.coords).pad(.12));
+}
+
+function updateNav(lat, lng) {
+  if (!navRoute) return;
+  const near = nearestOnRoute(lat, lng);
+  navIdx = near.idx;
+
+  const total = navCum[navCum.length - 1] || 1;
+  const done = navCum[navIdx] || 0;
+  const remain = Math.max(0, total - done);
+
+  // Next maneuver. In ORS a step's instruction applies at way_points[0],
+  // so we look for the first step that begins ahead of us.
+  let step = null, stepAt = 0;
+  for (const st of navRoute.steps) {
+    if (st.wp[0] > navIdx) { step = st; stepAt = st.wp[0]; break; }
+  }
+  if (!step && navRoute.steps.length) {          // past the last turn -> goal
+    step = navRoute.steps[navRoute.steps.length - 1];
+    stepAt = navRoute.coords.length - 1;
+  }
+
+  const ar = document.getElementById('nav-ar');
+  const dEl = document.getElementById('nav-d');
+  const tEl = document.getElementById('nav-t');
+
+  if (near.off > 60) {
+    ar.textContent = '⚠';
+    dEl.textContent = Math.round(near.off) + ' m';
+    tEl.textContent = 'Utenfor ruten';
+    tEl.classList.add('offroute');
+  } else if (step) {
+    const toTurn = Math.max(0, (navCum[Math.min(stepAt, navCum.length - 1)] || 0) - done);
+    const info = TURN[step.type] || ['Fortsett', '↑'];
+    ar.textContent = info[1];
+    dEl.textContent = toTurn >= 1000 ? (toTurn / 1000).toFixed(1) + ' km' : Math.round(toTurn) + ' m';
+    tEl.textContent = info[0] + (step.name ? ' · ' + step.name : '');
+    tEl.classList.remove('offroute');
+  }
+
+  const spd = curSpeed > 0.6 ? curSpeed : (navRoute.distance / Math.max(1, navRoute.duration));
+  const eta = new Date(Date.now() + (remain / Math.max(0.5, spd)) * 1000);
+  document.getElementById('nav-rem').textContent =
+    (remain >= 1000 ? (remain / 1000).toFixed(1) + ' km' : Math.round(remain) + ' m') + ' igjen';
+  document.getElementById('nav-eta').textContent =
+    'Fremme ' + eta.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('nav-bar').style.width = Math.min(100, done / total * 100) + '%';
 }
 
 /* ═══════════ PLACES ═══════════ */
@@ -1131,7 +1629,17 @@ function go(v) {
   else if (v === 'ferd') { initTMap(); setTimeout(() => { tmap.invalidateSize(); drawTPlaces(); }, 60); }
   else if (v === 'steder') renderPlaces();
   else if (v === 'trofeer') renderTrophies();
-  else if (v === 'profil') renderProfile();
+  else if (v === 'profil') { renderProfile(); loadKeyField(); }
+}
+
+function saveKey() {
+  const v = document.getElementById('ors-key').value.trim();
+  DB.setSettings({ orsKey: v });
+  toast(v ? 'Nøkkel lagret på denne telefonen' : 'Nøkkel fjernet');
+}
+function loadKeyField() {
+  const el = document.getElementById('ors-key');
+  if (el) el.value = (DB.settings().orsKey || '');
 }
 
 function escapeHtml(s) {
@@ -1163,6 +1671,8 @@ function escapeHtml(s) {
 
   initMap();
   setType('Walk');
+  setFerdMode('fri');
+  renderProfChips();
   evalAchievements(false);
 })();
 
