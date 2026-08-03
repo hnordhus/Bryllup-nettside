@@ -712,12 +712,29 @@
 <div id="gaveliste-page" class="hidden">
         <div class="container page-content">
             <h2>Ønskeliste</h2>
+
+            <div style="text-align: center; margin: 1.5rem 0 1rem;">
+                <a href="https://onsk.no/lister/1w6-990?s=%24device%3Af986f632-2f69-48d5-a503-1157e855084c"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   style="display: inline-block; background: var(--secondary); color: var(--white); text-decoration: none; padding: 0.85rem 2rem; border-radius: 8px; font-size: 1rem; font-weight: 400; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: background 0.3s, transform 0.2s;"
+                   onmouseover="this.style.background='var(--dark)'; this.style.transform='translateY(-2px)';"
+                   onmouseout="this.style.background='var(--secondary)'; this.style.transform='translateY(0)';">
+                    🎁 Åpne ønskelisten hos ønsk.no ↗
+                </a>
+                <p style="margin-top: 0.85rem; font-size: 0.9rem; color: var(--accent); font-style: italic;">
+                    Tips: Har du problemer med å reservere eller logge inn i visningen under, åpne listen direkte hos ønsk.no.
+                </p>
+            </div>
+
             <!-- ØNSK.NO IFRAME - Erstatt URL med din egen ønskeliste -->
             <div style="border-radius: 10px; overflow: hidden; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                 <iframe 
                     src="https://onsk.no/lister/1w6-990?s=%24device%3Af986f632-2f69-48d5-a503-1157e855084c"
                     style="width: 100%; height: 800px; border: none;"
-                    title="Ønskeliste">
+                    title="Ønskeliste"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    allow="clipboard-write">
                 </iframe>
             </div>
         </div>
