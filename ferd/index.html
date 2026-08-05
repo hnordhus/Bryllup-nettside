@@ -271,6 +271,25 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 .geo-loading{padding:11px 13px;font-size:13px;color:var(--muted)}
 .plan-search{position:static;margin-bottom:10px}
 .plan-search input{background:var(--bg);border-color:var(--border)}
+
+/* ---- waypoint editing ---- */
+.prof-hint{font-size:11px;color:var(--muted);text-align:center;margin:-2px 0 9px}
+.wprow{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:7px 9px;margin-bottom:6px}
+.wpbadge{width:22px;height:22px;border-radius:50%;color:#fff;font:700 11px var(--font);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wpco{flex:1;font-family:var(--mono);font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wpx{background:var(--border-light);border:none;border-radius:7px;width:26px;height:26px;font-size:13px;
+  cursor:pointer;color:var(--text-2);flex-shrink:0}
+.tag.e{background:var(--green)}
+
+/* ---- route picker sheet ---- */
+.rp-item{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:var(--card);
+  border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:7px;cursor:pointer}
+.rp-item .ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.rp-item .body{flex:1;min-width:0}
+.rp-item .body b{display:block;font-size:14px;font-weight:600}
+.rp-item .body small{display:block;font-size:12px;color:var(--text-2);margin-top:1px}
 </style>
 </head>
 <body>
@@ -299,7 +318,10 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
       <div class="results" id="res-plan"></div>
     </div>
     <div class="chips" id="prof-chips"></div>
+    <div id="prof-hint" class="prof-hint"></div>
     <div id="plan-hint" class="hint">Trykk på kartet for å sette start og mål</div>
+    <div id="wp-list"></div>
+    <button class="wide" id="from-pos" style="margin-top:0" onclick="useMyPosStart()">📍 Start fra min posisjon</button>
     <div id="alts"></div>
     <div class="row-btns">
       <button class="mini" onclick="undoWp()">↶</button>
@@ -415,15 +437,20 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
       <input type="text" id="ors-key" placeholder="Lim inn ORS-nøkkel" autocomplete="off" spellcheck="false">
       <button onclick="saveKey()">Lagre</button>
     </div>
-    <p class="keyhelp">Gratis nøkkel fra <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">openrouteservice.org</a>.
+    <p class="keyhelp">Gratis nøkkel fra <a href="https://account.heigit.org/signup" target="_blank" rel="noopener">account.heigit.org</a>.
       Den lagres kun på denne telefonen og ligger aldri i filen på nettet.</p>
+
+    <h2 class="section">Importer aktivitet</h2>
+    <button class="wide" onclick="document.getElementById('gpx-imp').click()">🏃 Importer tur fra Garmin (GPX)</button>
+    <input type="file" id="gpx-imp" accept=".gpx,application/gpx+xml,text/xml" style="display:none" onchange="importGpx(event)">
+    <p class="keyhelp">Eksporter en aktivitet fra Garmin Connect som <b>GPX</b> og importer den her — ingen Strava eller innlogging nødvendig.</p>
 
     <h2 class="section">Sikkerhetskopi</h2>
     <button class="wide" onclick="exportAll()">⬇ Eksporter alt (JSON)</button>
     <button class="wide" onclick="document.getElementById('imp').click()">⬆ Importer fra fil</button>
     <input type="file" id="imp" accept=".json,application/json" style="display:none" onchange="importAll(event)">
     <button class="wide danger" onclick="wipeAll()">🗑 Slett alle data</button>
-    <p class="ver">Ferd v2.0 · frittstående · ingen innlogging</p>
+    <p class="ver">Ferd v2.1 · frittstående · ingen innlogging</p>
   </div>
 </section>
 
@@ -448,6 +475,29 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
     <div class="sheet-btns">
       <button class="sb-cancel" onclick="closePlaceModal()">Avbryt</button>
       <button class="sb-save" id="pl-save" onclick="savePlace()">Lagre</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL: tur-detaljer ══════════ -->
+<div id="trackModal" class="modal" onclick="if(event.target===this)closeTrackModal()">
+  <div class="sheet">
+    <h3 id="tm-title">Tur</h3>
+    <div id="tm-body"></div>
+    <div class="sheet-btns">
+      <button class="sb-cancel" onclick="closeTrackModal()">Lukk</button>
+      <button class="sb-save" onclick="tmShowOnMap()">Vis på kart</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL: velg rute ══════════ -->
+<div id="routeModal" class="modal" onclick="if(event.target===this)closeRouteModal()">
+  <div class="sheet">
+    <h3>Velg rute å følge</h3>
+    <div id="rp-list"></div>
+    <div class="sheet-btns">
+      <button class="sb-cancel" onclick="closeRouteModal()">Avbryt</button>
     </div>
   </div>
 </div>
@@ -733,6 +783,7 @@ function onToggleBase(key) {
 }
 let map = null, trackLayer = null, placeLayer = null, fogOn = false, fog = null;
 let searchMarker = null, geoTimer = null, kartGeo = [], planGeo = [];
+let highlightId = null, tmId = null;
 
 function initMap() {
   if (map) return;
@@ -757,12 +808,17 @@ function drawMap() {
   document.getElementById('map-note').style.display = tracks.length ? 'none' : 'block';
 
   const bounds = [];
+  const hl = highlightId && tracks.some(t => t.id === highlightId);
   for (const t of tracks) {
     if (!t.coords || t.coords.length < 2) continue;
-    L.polyline(t.coords, { color: typeColor(t.type), weight: 3, opacity: .8, smoothFactor: 1 })
-      .bindPopup(`<b>${escapeHtml(t.name || 'Tur')}</b><br>${typeLabel(t.type)} · ${fmtDist(t.distance)} · ${fmtTime(t.movingTime)}<br><small>${fmtDate(t.date)}</small>`)
-      .addTo(trackLayer);
-    bounds.push(...t.coords);
+    const isHl = t.id === highlightId;
+    L.polyline(t.coords, {
+      color: typeColor(t.type),
+      weight: isHl ? 6 : 3,
+      opacity: (hl && !isHl) ? .18 : (isHl ? 1 : .8),
+      smoothFactor: 1,
+    }).on('click', () => openTrackDetail(t.id)).addTo(trackLayer);
+    if (!hl || isHl) bounds.push(...t.coords);
   }
 
   for (const p of DB.places()) {
@@ -842,7 +898,7 @@ function pickGeo(which, i) {
   } else {
     document.getElementById('res-plan').classList.remove('on');
     document.getElementById('q-plan').value = '';
-    wps.push([lat, lng]); clearAlts(); drawWps(); updatePlanHint();
+    wps.push([lat, lng]); clearAlts(); drawWps(); updatePlanHint(); renderWpList();
     map.setView([lat, lng], 14);
   }
 }
@@ -1153,10 +1209,11 @@ function stopTrack() {
 
 /* ═══════════ ROUTE PLANNING (OpenRouteService) ═══════════ */
 const PROFILES = {
-  'foot-walking':     { label: '🚶 Gange/løp', type: 'Walk' },
-  'foot-hiking':      { label: '🥾 Fjelltur',  type: 'Hike' },
-  'cycling-road':     { label: '🚴 Landevei',  type: 'Ride' },
-  'cycling-mountain': { label: '🚵 Terreng',   type: 'Ride' },
+  'foot-walking':     { label: '🚶 Gange/løp', type: 'Walk', hint: 'Fortau, gangveier og stier' },
+  'foot-hiking':      { label: '🥾 Fjelltur',  type: 'Hike', hint: 'Stier og terreng' },
+  'cycling-road':     { label: '🚴 Landevei',  type: 'Ride', hint: 'Kun asfalt — ingen grus/sti' },
+  'cycling-regular':  { label: '🚲 Grus',      type: 'Ride', hint: 'Grusveier og asfalt, ikke stier' },
+  'cycling-mountain': { label: '🚵 Terreng',   type: 'Ride', hint: 'Stier og terreng (terrengsykkel)' },
 };
 /* ORS instruction type -> Norwegian text + arrow (numeric, so language-independent) */
 const TURN = {
@@ -1239,17 +1296,31 @@ function parseFeature(f) {
   };
 }
 
-/** Tag alternatives: fastest / fewest turns / shortest. */
+/** How many ~100m cells a route touches that aren't already explored. */
+function routeNewCells(coords, explored) {
+  const seen = new Set();
+  for (const c of coords) {
+    const k = Math.floor(c[0] / CFG.CELL) + ':' + Math.floor(c[1] / lngCellSize(c[0]));
+    if (!explored.has(k)) seen.add(k);
+  }
+  return seen.size;
+}
+
+/** Tag alternatives: fastest / fewest turns / shortest / explores more. */
 function labelAlts(list) {
   if (!list.length) return;
   const minDur = Math.min(...list.map(r => r.duration));
   const minTurn = Math.min(...list.map(r => r.turns));
   const minDist = Math.min(...list.map(r => r.distance));
+  const explored = exploredCells();
+  list.forEach(r => { r.newCells = routeNewCells(r.coords, explored); });
+  const maxNew = Math.max(...list.map(r => r.newCells));
   list.forEach(r => {
     r.tags = [];
     if (r.duration === minDur) r.tags.push(['Raskest', '']);
     if (r.turns === minTurn && list.length > 1) r.tags.push(['Færrest svinger', 'g']);
     if (r.distance === minDist && r.duration !== minDur) r.tags.push(['Kortest', 'n']);
+    if (r.newCells === maxNew && maxNew > 0 && list.length > 1) r.tags.push(['Utforsker mer', 'e']);
   });
 }
 
@@ -1258,7 +1329,7 @@ function openPlan() {
   planOn = true;
   document.getElementById('plan').classList.add('on');
   document.getElementById('b-plan').classList.add('on');
-  renderProfChips(); renderSavedRoutes(); updatePlanHint();
+  renderProfChips(); renderSavedRoutes(); updatePlanHint(); renderWpList();
 }
 function closePlan() {
   planOn = false;
@@ -1270,13 +1341,15 @@ function renderProfChips() {
   if (!el) return;
   el.innerHTML = Object.entries(PROFILES).map(([k, v]) =>
     `<button class="chip ${k === profile ? 'on' : ''}" onclick="setProfile('${k}')">${v.label}</button>`).join('');
+  const h = document.getElementById('prof-hint');
+  if (h) h.textContent = (PROFILES[profile] || {}).hint || '';
 }
 function setProfile(k) { profile = k; renderProfChips(); clearAlts(); }
 
 function onMapTap(e) {
-  if (!planOn) return;
+  if (!planOn) { if (highlightId) { highlightId = null; drawMap(); } return; }
   wps.push([e.latlng.lat, e.latlng.lng]);
-  clearAlts(); drawWps(); updatePlanHint();
+  clearAlts(); drawWps(); updatePlanHint(); renderWpList();
 }
 function drawWps() {
   if (!wpLayer) return;
@@ -1286,20 +1359,60 @@ function drawWps() {
     const bg = first ? '#4CAF50' : last ? '#ef4444' : '#fff';
     const fg = (first || last) ? '#fff' : '#1e293b';
     const txt = first ? 'A' : last ? 'B' : String(i);
-    L.marker(w, { icon: L.divIcon({ className: '',
+    const m = L.marker(w, { draggable: true, icon: L.divIcon({ className: '',
       html: `<div class="place-pin" style="width:26px;height:26px;font-size:12px;font-weight:700;background:${bg};color:${fg}">${txt}</div>`,
       iconSize: [26, 26], iconAnchor: [13, 13] }) }).addTo(wpLayer);
+    m.on('dragend', ev => {
+      const ll = ev.target.getLatLng();
+      wps[i] = [ll.lat, ll.lng];
+      clearAlts(); drawWps(); updatePlanHint(); renderWpList();
+    });
   });
+}
+
+/* Editable waypoint list (reorder / delete / start from GPS) */
+function renderWpList() {
+  const el = document.getElementById('wp-list');
+  if (!el) return;
+  el.innerHTML = wps.map((w, i) => {
+    const first = i === 0, last = i === wps.length - 1 && wps.length > 1;
+    const lbl = first ? 'A' : last ? 'B' : String(i);
+    const bg = first ? '#4CAF50' : last ? '#ef4444' : '#64748b';
+    const up = i > 0 ? `<button class="wpx" onclick="moveWp(${i},-1)">↑</button>` : '';
+    const down = i < wps.length - 1 ? `<button class="wpx" onclick="moveWp(${i},1)">↓</button>` : '';
+    return `<div class="wprow"><span class="wpbadge" style="background:${bg}">${lbl}</span>` +
+      `<span class="wpco">${w[0].toFixed(4)}, ${w[1].toFixed(4)}</span>` +
+      `${up}${down}<button class="wpx" onclick="delWp(${i})">✕</button></div>`;
+  }).join('');
+}
+function moveWp(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= wps.length) return;
+  const t = wps[i]; wps[i] = wps[j]; wps[j] = t;
+  clearAlts(); drawWps(); updatePlanHint(); renderWpList();
+}
+function delWp(i) {
+  wps.splice(i, 1);
+  clearAlts(); drawWps(); updatePlanHint(); renderWpList();
+}
+function useMyPosStart() {
+  if (!navigator.geolocation) return toast('Stedstjenester støttes ikke');
+  toast('Henter posisjon…');
+  navigator.geolocation.getCurrentPosition(p => {
+    wps.unshift([p.coords.latitude, p.coords.longitude]);
+    clearAlts(); drawWps(); updatePlanHint(); renderWpList();
+    map.setView([p.coords.latitude, p.coords.longitude], 14);
+  }, () => toast('Kunne ikke hente posisjon'), { enableHighAccuracy: true, timeout: 10000 });
 }
 function updatePlanHint() {
   const h = document.getElementById('plan-hint');
   if (!h) return;
-  if (!wps.length) h.textContent = 'Trykk på kartet for å sette start og mål';
-  else if (wps.length === 1) h.textContent = 'Sett målet — trykk én gang til';
-  else h.textContent = wps.length + ' punkter' + (wps.length > 2 ? ' · alternativer vises kun ved 2 punkter' : '');
+  if (!wps.length) h.textContent = 'Trykk på kartet, eller søk, for å sette start og mål';
+  else if (wps.length === 1) h.textContent = 'Sett målet — trykk på kartet eller søk';
+  else h.textContent = wps.length + ' punkter · dra mark. for å justere' + (wps.length > 2 ? ' · alt. vises kun ved 2 punkter' : '');
 }
-function undoWp() { wps.pop(); clearAlts(); drawWps(); updatePlanHint(); }
-function clearWp() { wps = []; clearAlts(); drawWps(); updatePlanHint(); }
+function undoWp() { wps.pop(); clearAlts(); drawWps(); updatePlanHint(); renderWpList(); }
+function clearWp() { wps = []; clearAlts(); drawWps(); updatePlanHint(); renderWpList(); }
 function clearAlts() {
   alts = []; altPick = 0;
   if (altLayer) altLayer.clearLayers();
@@ -1324,16 +1437,36 @@ async function calcRoute() {
   }
 }
 
+/** Empirical time estimate from the user's own history for this activity type. */
+function empiricalSpeed(type) {
+  let d = 0, t = 0;
+  for (const tr of DB.tracks()) {
+    if ((tr.type || 'Walk') !== type) continue;
+    d += tr.distance || 0; t += tr.movingTime || 0;
+  }
+  return t > 0 ? d / t : 0;
+}
+function empiricalTime(profile, distance, ascent) {
+  const type = (PROFILES[profile] || {}).type || 'Walk';
+  const sp = empiricalSpeed(type);
+  if (sp <= 0) return null;
+  const climbPerM = type === 'Ride' ? 3 : 6;   // extra seconds per metre of ascent
+  return distance / sp + (ascent || 0) * climbPerM;
+}
+
 function renderAlts() {
-  document.getElementById('alts').innerHTML = alts.map((r, i) => `
+  document.getElementById('alts').innerHTML = alts.map((r, i) => {
+    const et = empiricalTime(profile, r.distance, r.ascent);
+    return `
     <div class="alt ${i === altPick ? 'on' : ''}" onclick="pickAlt(${i})">
       <div class="sw" style="background:${ALT_COLORS[i % 3]}"></div>
       <div class="b">
         <b>${(r.distance / 1000).toFixed(1)} km · ${fmtTimeShort(r.duration)}</b>
-        <small>${r.turns} svinger${r.ascent ? ' · ' + r.ascent + ' hm stigning' : ''}</small>
+        <small>${r.turns} svinger${r.ascent ? ' · ' + r.ascent + ' hm' : ''}${et ? ' · din tid ~' + fmtTimeShort(et) : ''}</small>
         <div class="tags">${(r.tags || []).map(t => `<span class="tag ${t[1]}">${t[0]}</span>`).join('')}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function pickAlt(i) { altPick = i; renderAlts(); drawAlts(); }
 function drawAlts() {
@@ -1430,12 +1563,21 @@ function renderRouteSelect() {
 
 function pickRoutePrompt() {
   const rs = DB.routes();
-  const list = rs.map((r, i) => (i + 1) + '. ' + r.name + ' (' + (r.distance / 1000).toFixed(1) + ' km)').join('\n');
-  const pick = prompt('Velg rute:\n\n' + list, '1');
-  const i = parseInt(pick, 10) - 1;
-  if (isNaN(i) || i < 0 || i >= rs.length) return;
-  useRoute(rs[i]);
+  const el = document.getElementById('rp-list');
+  el.innerHTML = rs.length ? rs.map((r, i) => `
+    <button class="rp-item" onclick="pickRouteSheet(${i})">
+      <div class="ic" style="background:rgba(42,117,199,.1)">🧭</div>
+      <div class="body"><b>${escapeHtml(r.name)}</b>
+        <small>${(r.distance/1000).toFixed(1)} km · ${r.turns} svinger · ${fmtTimeShort(r.duration)}</small></div>
+    </button>`).join('') : '<div class="empty" style="padding:20px">Ingen lagrede ruter</div>';
+  document.getElementById('routeModal').classList.add('on');
 }
+function pickRouteSheet(i) {
+  const rs = DB.routes();
+  if (rs[i]) useRoute(rs[i]);
+  closeRouteModal();
+}
+function closeRouteModal() { document.getElementById('routeModal').classList.remove('on'); }
 
 function useRoute(r) {
   navRoute = r;
@@ -1691,12 +1833,12 @@ function renderProfile() {
   // track list
   const tracks = DB.tracks();
   document.getElementById('p-tracklist').innerHTML = tracks.length
-    ? tracks.map(t => `<div class="item">
+    ? tracks.map(t => `<div class="item" style="cursor:pointer" onclick="openTrackDetail('${t.id}')">
         <div class="ic" style="background:${typeColor(t.type)}1a">${
           t.type === 'Ride' ? '🚴' : t.type === 'Run' ? '🏃' : t.type === 'Hike' ? '🥾' : '🚶'}</div>
         <div class="body"><b>${escapeHtml(t.name || 'Tur')}</b>
           <small>${fmtDate(t.date)} · ${fmtDist(t.distance)} · ${fmtTime(t.movingTime)}</small></div>
-        <button class="x" onclick="delTrack('${t.id}')">✕</button>
+        <button class="x" onclick="event.stopPropagation();delTrack('${t.id}')">✕</button>
       </div>`).join('')
     : '<div class="empty" style="padding:20px">Ingen turer ennå.</div>';
 }
@@ -1704,6 +1846,53 @@ function renderProfile() {
 function delTrack(id) {
   if (!confirm('Slette denne turen?')) return;
   DB.delTrack(id);
+  renderProfile(); drawMap();
+}
+
+/* ---- track detail sheet + map highlight (items 7 & 11) ---- */
+function paceFmt(speed) {
+  const pace = 1000 / speed / 60;
+  if (!isFinite(pace) || pace > 60 || pace <= 0) return '–';
+  const mi = Math.floor(pace), se = Math.round((pace - mi) * 60);
+  return `${mi}:${String(se).padStart(2,'0')} /km`;
+}
+function highlightTrack(id) {
+  highlightId = id;
+  go('kart');
+  setTimeout(() => { map.invalidateSize(); drawMap(); }, 90);
+}
+function openTrackDetail(id) {
+  const t = DB.tracks().find(x => x.id === id);
+  if (!t) return;
+  tmId = id;
+  document.getElementById('tm-title').textContent = t.name || 'Tur';
+  const moving = t.movingTime || 0, elapsed = t.elapsedTime || moving;
+  const avg = t.avgSpeed || (moving > 0 ? (t.distance / moving) : 0);
+  const speedStr = t.type === 'Ride' ? (avg > 0 ? (avg * 3.6).toFixed(1) + ' km/t' : '–') : paceFmt(avg);
+  const km2 = (routeNewCells(t.coords || [], new Set()) * CFG.CELL_KM2).toFixed(2);
+  document.getElementById('tm-body').innerHTML =
+    `<div class="tcard-h" style="margin-bottom:12px">` +
+    `<span class="dot" style="background:${typeColor(t.type)}"></span>` +
+    `<b>${typeLabel(t.type)}</b><span>${fmtDate(t.date)}</span></div>` +
+    `<div class="grid3">` +
+    `<div class="card"><div class="lab">Distanse</div><div class="val">${(t.distance/1000).toFixed(2)}<i>km</i></div></div>` +
+    `<div class="card"><div class="lab">Tid</div><div class="val">${fmtTime(moving)}</div></div>` +
+    `<div class="card"><div class="lab">${t.type === 'Ride' ? 'Snittfart' : 'Tempo'}</div><div class="val">${speedStr}</div></div>` +
+    `</div><div class="grid3" style="margin-top:8px">` +
+    `<div class="card"><div class="lab">Varighet</div><div class="val">${fmtTime(elapsed)}</div></div>` +
+    `<div class="card"><div class="lab">Punkter</div><div class="val">${(t.coords||[]).length}</div></div>` +
+    `<div class="card"><div class="lab">Utforsket</div><div class="val">${km2}<i>km²</i></div></div>` +
+    `</div>` +
+    `<button class="wide danger" style="margin-top:14px" onclick="delTrackFromModal()">🗑 Slett denne turen</button>`;
+  document.getElementById('trackModal').classList.add('on');
+}
+function closeTrackModal() { document.getElementById('trackModal').classList.remove('on'); }
+function tmShowOnMap() { if (tmId) { closeTrackModal(); highlightTrack(tmId); } }
+function delTrackFromModal() {
+  if (!tmId || !confirm('Slette denne turen?')) return;
+  DB.delTrack(tmId);
+  if (highlightId === tmId) highlightId = null;
+  closeTrackModal();
   renderProfile(); drawMap();
 }
 
@@ -1760,6 +1949,65 @@ function importAll(ev) {
       drawMap(); drawTPlaces(); renderPlaces(); renderProfile();
     } catch (err) {
       toast('Ugyldig fil — forventet en Ferd-sikkerhetskopi');
+    }
+  };
+  r.readAsText(file);
+  ev.target.value = '';
+}
+
+/* Import a single activity from a Garmin GPX export (no server, no Strava) */
+function importGpx(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const xml = new DOMParser().parseFromString(e.target.result, 'application/xml');
+      if (xml.querySelector('parsererror')) throw new Error('bad');
+      const pts = Array.from(xml.getElementsByTagName('trkpt'));
+      const coords = [], times = [];
+      for (const p of pts) {
+        const lat = parseFloat(p.getAttribute('lat')), lng = parseFloat(p.getAttribute('lon'));
+        if (isNaN(lat) || isNaN(lng)) continue;
+        coords.push([lat, lng]);
+        const tEl = p.getElementsByTagName('time')[0];
+        times.push(tEl ? new Date(tEl.textContent).getTime() : null);
+      }
+      if (coords.length < 2) throw new Error('empty');
+
+      let dist = 0;
+      for (let i = 1; i < coords.length; i++)
+        dist += haversine(coords[i-1][0], coords[i-1][1], coords[i][0], coords[i][1]);
+
+      const valid = times.filter(x => x);
+      const start = valid.length ? valid[0] : Date.now();
+      const end = valid.length ? valid[valid.length - 1] : start;
+      const elapsed = Math.max(0, Math.round((end - start) / 1000));
+      const avg = elapsed > 0 ? dist / elapsed : 0;
+
+      let type = 'Walk';
+      if (avg > 4) type = 'Ride'; else if (avg > 2.4) type = 'Run';
+      const nameEl = xml.getElementsByTagName('name')[0];
+      const gpxName = nameEl ? nameEl.textContent.trim() : '';
+
+      const track = {
+        id: 'gpx-' + start + '-' + Math.round(dist),
+        name: gpxName || ('Importert – ' + typeLabel(type)),
+        type, coords, distance: dist,
+        movingTime: elapsed, elapsedTime: elapsed,
+        date: new Date(start).toISOString(),
+        avgSpeed: avg, source: 'gpx',
+      };
+      const tracks = DB.read(K_TRACKS, []);
+      if (tracks.some(x => x.id === track.id)) { toast('Denne turen er allerede importert'); }
+      else {
+        tracks.push(track); DB.write(K_TRACKS, tracks);
+        toast('Importert: ' + fmtDist(dist) + ' · ' + typeLabel(type), 3500);
+        setTimeout(() => evalAchievements(true), 700);
+      }
+      drawMap(); renderProfile();
+    } catch (err) {
+      toast('Kunne ikke lese GPX-filen');
     }
   };
   r.readAsText(file);
