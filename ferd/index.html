@@ -36,7 +36,8 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 
 /* ---- maps ---- */
 #map,#tmap{width:100%;height:100%;z-index:1;background:#e8eef2}
-.map-btns{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;z-index:600;display:flex;flex-direction:column;gap:7px}
+.map-btns{position:absolute;top:calc(env(safe-area-inset-top,0px) + 58px);left:10px;z-index:600;display:flex;flex-direction:column;gap:7px}
+.tmap-btns{position:absolute;top:calc(env(safe-area-inset-top,0px) + 200px);right:10px;z-index:620;display:flex;flex-direction:column;gap:7px}
 .mbtn{background:rgba(255,255,255,.93);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.6);
   border-radius:10px;padding:9px 13px;font:500 13px var(--font);color:var(--text);cursor:pointer;box-shadow:var(--sh-sm)}
 .mbtn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
@@ -237,6 +238,39 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
   font:600 13px var(--font);cursor:pointer}
 .keyhelp{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.55}
 .keyhelp a{color:var(--blue)}
+
+/* ---- live stats grid (På Ferd, mockup style) ---- */
+.livegrid{display:none;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:11px}
+.livegrid.on{display:grid}
+.livegrid .lv{background:var(--navy);color:#fff;border-radius:14px;padding:12px 6px;text-align:center}
+.livegrid .lv b{display:block;font-family:var(--mono);font-size:23px;font-weight:600;line-height:1.1}
+.livegrid .lv span{font-size:9px;opacity:.72;text-transform:uppercase;letter-spacing:.5px;display:block;margin-top:4px}
+
+/* ---- compact tracking controls ---- */
+.ctrl-row{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:4px}
+.rbtn{width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;font-size:18px;box-shadow:var(--sh-md)}
+.rbtn.place{width:46px;height:46px;background:var(--card);border:1px solid var(--border);font-size:19px}
+.rbtn.pause{width:46px;height:46px;background:var(--navy);color:#fff;font-size:15px;letter-spacing:1px}
+.rbtn.stop{background:var(--error);position:relative}
+.rbtn.stop::before{content:'';width:18px;height:18px;background:#fff;border-radius:4px}
+
+/* ---- place search (Nominatim) ---- */
+.searchbar{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;right:10px;z-index:640}
+.searchbar input{width:100%;padding:11px 14px;border:1px solid rgba(255,255,255,.6);border-radius:12px;
+  font:400 14px var(--font);color:var(--text);background:rgba(255,255,255,.95);backdrop-filter:blur(12px);
+  outline:none;box-shadow:var(--sh-sm)}
+.searchbar input:focus{border-color:var(--blue)}
+.results{margin-top:6px;background:var(--card);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;box-shadow:var(--sh-md);display:none;max-height:260px;overflow-y:auto}
+.results.on{display:block}
+.geo-item{display:block;width:100%;text-align:left;padding:11px 13px;border:none;background:none;
+  border-bottom:1px solid var(--border-light);font:400 13px var(--font);color:var(--text);cursor:pointer;line-height:1.4}
+.geo-item:last-child{border-bottom:none}
+.geo-item:active{background:var(--border-light)}
+.geo-loading{padding:11px 13px;font-size:13px;color:var(--muted)}
+.plan-search{position:static;margin-bottom:10px}
+.plan-search input{background:var(--bg);border-color:var(--border)}
 </style>
 </head>
 <body>
@@ -244,7 +278,12 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 <!-- ══════════ KART ══════════ -->
 <section id="v-kart" class="view active">
   <div id="map"></div>
+  <div class="searchbar">
+    <input type="search" id="q-kart" placeholder="Søk etter sted…" autocomplete="off" oninput="searchKart()">
+    <div class="results" id="res-kart"></div>
+  </div>
   <div class="map-btns">
+    <button id="b-base-kart" class="mbtn" onclick="onToggleBase('kart')">◱ Satellitt</button>
     <button id="b-fog" class="mbtn" onclick="toggleFog()">◌ Tåke</button>
     <button class="mbtn" onclick="locateMe()">⊕ Posisjon</button>
     <button id="b-plan" class="mbtn" onclick="openPlan()">🧭 Planlegg</button>
@@ -255,6 +294,10 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
   </div>
   <div id="plan" class="plan">
     <div class="plan-h"><b>Planlegg rute</b><button class="x" style="font-size:19px" onclick="closePlan()">✕</button></div>
+    <div class="searchbar plan-search">
+      <input type="search" id="q-plan" placeholder="Søk og legg til punkt…" autocomplete="off" oninput="searchPlan()">
+      <div class="results" id="res-plan"></div>
+    </div>
     <div class="chips" id="prof-chips"></div>
     <div id="plan-hint" class="hint">Trykk på kartet for å sette start og mål</div>
     <div id="alts"></div>
@@ -272,10 +315,9 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 <!-- ══════════ PÅ FERD ══════════ -->
 <section id="v-ferd" class="view">
   <div id="tmap"></div>
-  <div id="live" class="live">
-    <div class="lv"><b id="l-dist">0.00</b><span id="l-dist-u">km</span></div>
-    <div class="lv"><b id="l-time">0:00</b><span>tid</span></div>
-    <div class="lv"><b id="l-speed">–</b><span id="l-speed-u">tempo</span></div>
+  <div class="tmap-btns">
+    <button id="b-base-ferd" class="mbtn" onclick="onToggleBase('ferd')">◱ Satellitt</button>
+    <button class="mbtn" onclick="locateFerd()">⊕ Posisjon</button>
   </div>
   <div id="paused" class="paused-tag">⏸ Pauset</div>
 
@@ -303,9 +345,15 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
     </div>
     <div id="gps" class="gps"></div>
     <button id="b-start" class="big start" onclick="startTrack()">▶ Start Ferd</button>
-    <div id="stop-row" class="row-btns" style="display:none">
-      <button class="btn-ghost" style="flex:0 0 auto;padding:12px 16px" onclick="openPlaceModal()">📍 Sted</button>
-      <button class="big stop" onclick="stopTrack()">■ Stopp og lagre</button>
+    <div id="live" class="livegrid">
+      <div class="lv"><b id="l-dist">0.00</b><span id="l-dist-u">km</span></div>
+      <div class="lv"><b id="l-time">0:00</b><span>tid</span></div>
+      <div class="lv"><b id="l-speed">–</b><span id="l-speed-u">tempo</span></div>
+    </div>
+    <div id="stop-row" class="ctrl-row" style="display:none">
+      <button class="rbtn place" onclick="openPlaceModal()" title="Lagre sted">📍</button>
+      <button id="pause-btn" class="rbtn pause" onclick="togglePause()" title="Pause">❚❚</button>
+      <button class="rbtn stop" onclick="stopTrack()" title="Stopp og lagre"></button>
     </div>
   </div>
 </section>
@@ -666,13 +714,31 @@ function evalAchievements(announce) {
 
 /* ═══════════ MAP (Kart tab) ═══════════ */
 const TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+const SAT_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const baseLayers = {};
+function makeBase(mapObj, key) {
+  const street = L.tileLayer(TILES, { maxZoom: 19, attribution: '© CARTO © OSM' });
+  const sat = L.tileLayer(SAT_TILES, { maxZoom: 19, attribution: '© Esri' });
+  street.addTo(mapObj);
+  baseLayers[key] = { mapObj, street, sat, satOn: false };
+}
+function onToggleBase(key) {
+  const b = baseLayers[key];
+  if (!b) return;
+  b.satOn = !b.satOn;
+  if (b.satOn) { b.mapObj.removeLayer(b.street); b.sat.addTo(b.mapObj); }
+  else { b.mapObj.removeLayer(b.sat); b.street.addTo(b.mapObj); }
+  const btn = document.getElementById('b-base-' + key);
+  if (btn) btn.textContent = b.satOn ? '◱ Standard' : '◱ Satellitt';
+}
 let map = null, trackLayer = null, placeLayer = null, fogOn = false, fog = null;
+let searchMarker = null, geoTimer = null, kartGeo = [], planGeo = [];
 
 function initMap() {
   if (map) return;
   map = L.map('map', { center: [59.91, 10.75], zoom: 13, zoomControl: false });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
-  L.tileLayer(TILES, { attribution: '© CARTO © OSM', maxZoom: 19 }).addTo(map);
+  makeBase(map, 'kart');
   L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
   trackLayer = L.layerGroup().addTo(map);
   placeLayer = L.layerGroup().addTo(map);
@@ -726,6 +792,66 @@ function locateMe() {
     () => toast('Kunne ikke hente posisjon'),
     { enableHighAccuracy: true, timeout: 10000 }
   );
+}
+
+/* ---- place search (Nominatim, keyless) ---- */
+async function geocode(q, near) {
+  const params = new URLSearchParams({ format: 'json', q, limit: '6', 'accept-language': 'no' });
+  if (near) params.set('viewbox', `${near[1]-0.5},${near[0]+0.5},${near[1]+0.5},${near[0]-0.5}`);
+  const res = await fetch('https://nominatim.openstreetmap.org/search?' + params.toString(), {
+    headers: { 'Accept': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Søk feilet');
+  return res.json();
+}
+function searchKart() { runSearch('q-kart', 'res-kart', 'kart'); }
+function searchPlan() { runSearch('q-plan', 'res-plan', 'plan'); }
+function runSearch(inpId, boxId, which) {
+  clearTimeout(geoTimer);
+  const inp = document.getElementById(inpId), box = document.getElementById(boxId);
+  const q = inp.value.trim();
+  if (q.length < 3) { box.classList.remove('on'); box.innerHTML = ''; return; }
+  geoTimer = setTimeout(async () => {
+    box.classList.add('on');
+    box.innerHTML = '<div class="geo-loading">Søker…</div>';
+    try {
+      const c = map && map.getCenter ? map.getCenter() : { lat: 59.91, lng: 10.75 };
+      const list = await geocode(q, [c.lat, c.lng]);
+      if (which === 'kart') kartGeo = list; else planGeo = list;
+      if (!list.length) { box.innerHTML = '<div class="geo-loading">Ingen treff</div>'; return; }
+      box.innerHTML = list.map((r, i) =>
+        `<button class="geo-item" onclick="pickGeo('${which}',${i})">${escapeHtml(r.display_name)}</button>`).join('');
+    } catch (e) {
+      box.innerHTML = '<div class="geo-loading">Søk feilet — prøv igjen</div>';
+    }
+  }, 500);
+}
+function pickGeo(which, i) {
+  const r = (which === 'kart' ? kartGeo : planGeo)[i];
+  if (!r) return;
+  const lat = parseFloat(r.lat), lng = parseFloat(r.lon);
+  const short = r.display_name.split(',')[0];
+  if (which === 'kart') {
+    document.getElementById('res-kart').classList.remove('on');
+    document.getElementById('q-kart').value = short;
+    if (searchMarker) map.removeLayer(searchMarker);
+    searchMarker = L.marker([lat, lng], { icon: L.divIcon({ className: '',
+      html: '<div class="place-pin" style="width:30px;height:30px">📍</div>', iconSize: [30, 30], iconAnchor: [15, 15] }) })
+      .addTo(map).bindPopup('<b>' + escapeHtml(short) + '</b>').openPopup();
+    map.setView([lat, lng], 15);
+  } else {
+    document.getElementById('res-plan').classList.remove('on');
+    document.getElementById('q-plan').value = '';
+    wps.push([lat, lng]); clearAlts(); drawWps(); updatePlanHint();
+    map.setView([lat, lng], 14);
+  }
+}
+function locateFerd() {
+  if (!navigator.geolocation) return toast('Stedstjenester støttes ikke');
+  navigator.geolocation.getCurrentPosition(
+    p => tmap.setView([p.coords.latitude, p.coords.longitude], 16),
+    () => toast('Kunne ikke hente posisjon'),
+    { enableHighAccuracy: true, timeout: 10000 });
 }
 
 /* ---- Fog of war ---- */
@@ -802,7 +928,7 @@ let sessionVisits = new Set();
 function initTMap() {
   if (tmap) return;
   tmap = L.map('tmap', { center: [59.91, 10.75], zoom: 15, zoomControl: false });
-  L.tileLayer(TILES, { attribution: '© CARTO', maxZoom: 19 }).addTo(tmap);
+  makeBase(tmap, 'ferd');
   tPlaceLayer = L.layerGroup().addTo(tmap);
   drawTPlaces();
   if (navigator.geolocation) {
@@ -845,9 +971,24 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && active && !wakeLock) lockScreen();
 });
 
+function reflectPause() {
+  const b = document.getElementById('pause-btn');
+  if (b) b.innerHTML = paused ? '▶' : '❚❚';
+  document.getElementById('paused').classList.toggle('on', paused);
+}
+function togglePause() {
+  if (!active) return;
+  paused = !paused;
+  if (paused) { lastMoveTime = Date.now(); gps('Pauset — trykk ▶ for å fortsette', 'warn'); }
+  else { lastFixTime = Date.now(); lastMoveTime = Date.now(); gps('Sporer…', 'ok'); }
+  reflectPause();
+}
+
 function startTrack() {
   if (ferdMode === 'rute' && !navRoute) return toast('Velg en rute først');
   if (!navigator.geolocation) return toast('Stedstjenester støttes ikke i denne nettleseren');
+  // iOS: drop focus so a device shake can't trigger the "Undo typing/paste" popup
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
 
   coords = []; dist = 0; movingMs = 0; curSpeed = 0;
   tStart = Date.now(); lastFixTime = 0; lastMoveTime = Date.now();
@@ -859,6 +1000,7 @@ function startTrack() {
   document.getElementById('chips').style.display = 'none';
   document.getElementById('live').classList.add('on');
   document.getElementById('ferd-modes').style.display = 'none';
+  document.getElementById('rsel-wrap').style.display = 'none';
   if (navRoute) {
     navIdx = 0;
     document.getElementById('navcard').classList.add('on');
@@ -872,6 +1014,7 @@ function startTrack() {
   watchId = navigator.geolocation.watchPosition(onFix, onFixError,
     { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 });
   tickId = setInterval(tick, 1000);
+  reflectPause();
   lockScreen();
 }
 
@@ -902,7 +1045,7 @@ function onFix(pos) {
       dist += d;
       coords.push(pt);
       lastMoveTime = now;
-      if (paused) { paused = false; document.getElementById('paused').classList.remove('on'); }
+      if (paused) { paused = false; reflectPause(); }
     }
     // accumulate moving time only while actually moving
     if (!paused && lastFixTime) movingMs += now - lastFixTime;
@@ -945,6 +1088,7 @@ function tick() {
   if (active && !paused && now - lastMoveTime > CFG.PAUSE_AFTER * 1000 && curSpeed < CFG.PAUSE_SPEED) {
     paused = true;
     document.getElementById('paused').classList.add('on');
+    reflectPause();
     gps('Pauset — beveg deg for å fortsette', 'warn');
   }
   const d = document.getElementById('l-dist'), u = document.getElementById('l-dist-u');
@@ -998,6 +1142,7 @@ function stopTrack() {
   document.getElementById('chips').style.display = 'flex';
   document.getElementById('live').classList.remove('on');
   document.getElementById('ferd-modes').style.display = 'flex';
+  document.getElementById('rsel-wrap').style.display = '';
   document.getElementById('navcard').classList.remove('on');
   document.getElementById('viewtog').classList.remove('on');
   document.getElementById('paused').classList.remove('on');
@@ -1565,8 +1710,8 @@ function delTrack(id) {
 /* ═══════════ BACKUP ═══════════ */
 function exportAll() {
   const data = {
-    app: 'Ferd', version: 2, exported: new Date().toISOString(),
-    tracks: DB.tracks(), places: DB.places(), unlocked: DB.unlocked(),
+    app: 'Ferd', version: 2, schemaVersion: 2, exported: new Date().toISOString(),
+    tracks: DB.tracks(), places: DB.places(), routes: DB.routes(), unlocked: DB.unlocked(),
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1600,7 +1745,18 @@ function importAll(ev) {
       for (const p of inPlaces) if (p && p.id && !pids.has(p.id)) { places.push(p); np++; }
       DB.write(K_PLACES, places);
 
-      toast(`Importert: ${nt} turer, ${np} steder`, 3500);
+      const inRoutes = Array.isArray(parsed) ? [] : (parsed.routes || []);
+      const routes = DB.read(K_ROUTES, []);
+      const rids = new Set(routes.map(r => r.id));
+      let nr = 0;
+      for (const r of inRoutes) if (r && r.id && !rids.has(r.id)) { routes.push(r); nr++; }
+      DB.write(K_ROUTES, routes);
+
+      if (!Array.isArray(parsed) && parsed.unlocked && typeof parsed.unlocked === 'object') {
+        DB.write(K_UNLOCK, Object.assign({}, DB.read(K_UNLOCK, {}), parsed.unlocked));
+      }
+
+      toast(`Importert: ${nt} turer, ${np} steder, ${nr} ruter`, 3500);
       drawMap(); drawTPlaces(); renderPlaces(); renderProfile();
     } catch (err) {
       toast('Ugyldig fil — forventet en Ferd-sikkerhetskopi');
@@ -1651,14 +1807,16 @@ function escapeHtml(s) {
 (function boot() {
   // Build the web-app manifest at runtime so this stays a single file
   try {
-    const icon = document.querySelector('link[rel="apple-touch-icon"]').href;
+    const icon = new URL('icon.png', location.href).href;
+    const iconEl = document.querySelector('link[rel="apple-touch-icon"]');
+    if (iconEl) iconEl.href = icon;
     const mf = {
       name: 'Ferd', short_name: 'Ferd',
       description: 'Utforsk verden rundt deg',
       start_url: location.href.split('#')[0],
       display: 'standalone', orientation: 'portrait',
       background_color: '#f8fafb', theme_color: '#2A75C7',
-      icons: [{ src: icon, sizes: '180x180', type: 'image/png', purpose: 'any maskable' }],
+      icons: [{ src: icon, sizes: '512x512', type: 'image/png', purpose: 'any' }],
     };
     const url = URL.createObjectURL(new Blob([JSON.stringify(mf)], { type: 'application/json' }));
     document.getElementById('manifest-link').href = url;
