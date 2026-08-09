@@ -243,8 +243,8 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 .livegrid{display:none;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:11px}
 .livegrid.on{display:grid}
 .livegrid .lv{background:var(--navy);color:#fff;border-radius:14px;padding:12px 6px;text-align:center}
-.livegrid .lv b{display:block;font-family:var(--mono);font-size:23px;font-weight:600;line-height:1.1}
-.livegrid .lv span{font-size:9px;opacity:.72;text-transform:uppercase;letter-spacing:.5px;display:block;margin-top:4px}
+.livegrid .lv b{display:block;font-family:var(--mono);font-size:23px;font-weight:600;line-height:1.1;color:#fff}
+.livegrid .lv span{font-size:9px;opacity:.72;text-transform:uppercase;letter-spacing:.5px;display:block;margin-top:4px;color:#fff}
 
 /* ---- compact tracking controls ---- */
 .ctrl-row{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:4px}
@@ -304,6 +304,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
   <div class="map-btns">
     <button id="b-base-kart" class="mbtn" onclick="onToggleBase('kart')">◱ Satellitt</button>
     <button id="b-fog" class="mbtn" onclick="toggleFog()">◌ Tåke</button>
+    <button id="b-heat" class="mbtn" onclick="toggleHeat()">🔥 Heatmap</button>
     <button class="mbtn" onclick="locateMe()">⊕ Posisjon</button>
     <button id="b-plan" class="mbtn" onclick="openPlan()">🧭 Planlegg</button>
   </div>
@@ -359,6 +360,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
       <button id="m-rute" onclick="setFerdMode('rute')">Følg rute</button>
     </div>
     <div id="rsel-wrap"></div>
+    <button class="wide" id="btn-home" style="margin-top:0;border-color:var(--blue);color:var(--blue);font-weight:600" onclick="goHome()">🏠 Ferd hjem</button>
     <div id="chips" class="chips">
       <button class="chip on" data-t="Walk" onclick="setType('Walk')">🚶 Gange</button>
       <button class="chip" data-t="Run" onclick="setType('Run')">🏃 Løping</button>
@@ -431,6 +433,8 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
     <div class="srow"><span>Enheter</span><span>Metrisk (km)</span></div>
     <div class="srow"><span>Datalagring</span><span>Kun på denne enheten</span></div>
     <div class="srow"><span>Hold skjermen på</span><span id="p-wake">Automatisk</span></div>
+    <div class="srow"><span>Hjem</span><span id="home-coord">Ikke satt</span></div>
+    <button class="wide" onclick="setHomeHere()">🏠 Sett hjem til min posisjon</button>
 
     <h2 class="section">Ruteplanlegging</h2>
     <div class="keyrow">
@@ -505,6 +509,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 <div id="toast"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════
    FERD — standalone exploration app
@@ -784,6 +789,7 @@ function onToggleBase(key) {
 let map = null, trackLayer = null, placeLayer = null, fogOn = false, fog = null;
 let searchMarker = null, geoTimer = null, kartGeo = [], planGeo = [];
 let highlightId = null, tmId = null;
+let heatOn = false, heatLayer = null;
 
 function initMap() {
   if (map) return;
@@ -817,7 +823,10 @@ function drawMap() {
       weight: isHl ? 6 : 3,
       opacity: (hl && !isHl) ? .18 : (isHl ? 1 : .8),
       smoothFactor: 1,
-    }).on('click', () => openTrackDetail(t.id)).addTo(trackLayer);
+      interactive: false,
+    }).addTo(trackLayer);
+    L.polyline(t.coords, { color: '#000', weight: 20, opacity: 0 })
+      .on('click', () => openTrackDetail(t.id)).addTo(trackLayer);
     if (!hl || isHl) bounds.push(...t.coords);
   }
 
@@ -974,6 +983,21 @@ function toggleFog() {
   else if (fog) map.removeLayer(fog);
 }
 
+/* ---- Heatmap (intensity of everywhere you've been) ---- */
+function toggleHeat() {
+  if (!L.heatLayer) { toast('Heatmap kunne ikke lastes'); return; }
+  heatOn = !heatOn;
+  const b = document.getElementById('b-heat');
+  b.classList.toggle('on', heatOn);
+  if (heatOn) {
+    const pts = [];
+    for (const t of DB.tracks()) for (const c of (t.coords || [])) pts.push([c[0], c[1], 0.6]);
+    if (!pts.length) { toast('Ingen turer å vise'); heatOn = false; b.classList.remove('on'); return; }
+    if (heatLayer) map.removeLayer(heatLayer);
+    heatLayer = L.heatLayer(pts, { radius: 18, blur: 16, maxZoom: 17, minOpacity: .3 }).addTo(map);
+  } else if (heatLayer) { map.removeLayer(heatLayer); }
+}
+
 /* ═══════════ TRACKING (På Ferd tab) ═══════════ */
 let tmap = null, tLine = null, tMarker = null, tPlaceLayer = null;
 let active = false, paused = false, type = 'Walk';
@@ -1057,6 +1081,7 @@ function startTrack() {
   document.getElementById('live').classList.add('on');
   document.getElementById('ferd-modes').style.display = 'none';
   document.getElementById('rsel-wrap').style.display = 'none';
+  document.getElementById('btn-home').style.display = 'none';
   if (navRoute) {
     navIdx = 0;
     document.getElementById('navcard').classList.add('on');
@@ -1199,6 +1224,7 @@ function stopTrack() {
   document.getElementById('live').classList.remove('on');
   document.getElementById('ferd-modes').style.display = 'flex';
   document.getElementById('rsel-wrap').style.display = '';
+  document.getElementById('btn-home').style.display = '';
   document.getElementById('navcard').classList.remove('on');
   document.getElementById('viewtog').classList.remove('on');
   document.getElementById('paused').classList.remove('on');
@@ -1519,7 +1545,9 @@ function showRoute(id) {
   const r = DB.routes().find(x => x.id === id);
   if (!r || !altLayer) return;
   altLayer.clearLayers(); wpLayer.clearLayers();
-  L.polyline(r.coords, { color: '#2A75C7', weight: 5, opacity: .9 }).addTo(altLayer);
+  L.polyline(r.coords, { color: '#2A75C7', weight: 5, opacity: .9 })
+    .bindPopup(`<b>${escapeHtml(r.name)}</b><br>${(r.distance/1000).toFixed(1)} km · ${r.turns} svinger · ${fmtTimeShort(r.duration)}`)
+    .addTo(altLayer).openPopup();
   map.fitBounds(L.latLngBounds(r.coords).pad(.15));
   closePlan();
 }
@@ -1555,9 +1583,10 @@ function renderRouteSelect() {
     wrap.innerHTML = '<div class="rsel"><b style="font-weight:400;color:var(--muted)">Ingen lagrede ruter — planlegg én i Kart</b></div>';
     return;
   }
+  const flipBtn = navRoute ? '<button class="checkin" onclick="flipRoute()" title="Følg motsatt vei">⇄</button>' : '';
   wrap.innerHTML = '<div class="rsel"><span>🧭</span><b>' +
-    (navRoute ? escapeHtml(navRoute.name) : 'Velg rute') +
-    '</b><button class="checkin" onclick="pickRoutePrompt()">' +
+    (navRoute ? escapeHtml(navRoute.name) + (navRoute._rev ? ' ↩' : '') : 'Velg rute') +
+    '</b>' + flipBtn + '<button class="checkin" onclick="pickRoutePrompt()">' +
     (navRoute ? 'Bytt' : 'Velg') + '</button></div>';
 }
 
@@ -1591,6 +1620,61 @@ function useRoute(r) {
   }
   renderRouteSelect();
   toast(r.name + ' · ' + r.turns + ' svinger');
+}
+
+/* Follow a route in reverse (end → start). Turn-by-turn is dropped when reversed. */
+function flipRoute() {
+  if (!navRoute) return;
+  navRoute = Object.assign({}, navRoute, {
+    coords: navRoute.coords.slice().reverse(),
+    steps: [],
+    _rev: !navRoute._rev,
+  });
+  navCum = cumulative(navRoute.coords);
+  navIdx = 0;
+  if (tmap && navLine) {
+    tmap.removeLayer(navLine);
+    navLine = L.polyline(navRoute.coords, { color: '#2A75C7', weight: 5, opacity: .55, dashArray: '9,7' }).addTo(tmap);
+    tmap.fitBounds(L.latLngBounds(navRoute.coords).pad(.15));
+  }
+  renderRouteSelect();
+  toast(navRoute._rev ? 'Følger ruten baklengs ↩' : 'Følger ruten forlengs');
+}
+
+/* Ferd hjem: route from current position to the saved home. */
+function goHome() {
+  const home = DB.settings().home;
+  if (!home) { toast('Sett hjem i Min Ferd først'); go('profil'); return; }
+  if (!navigator.geolocation) return toast('Stedstjenester støttes ikke');
+  toast('Beregner rute hjem…');
+  navigator.geolocation.getCurrentPosition(async p => {
+    try {
+      const list = await orsRoute(profile, [[p.coords.latitude, p.coords.longitude], home], false);
+      const r = list[0];
+      setFerdMode('rute');
+      useRoute({
+        id: 'home', name: 'Hjem', profile,
+        coords: r.coords, steps: r.steps, distance: r.distance,
+        duration: r.duration, ascent: r.ascent, turns: r.turns,
+      });
+      toast('Rute hjem klar — trykk Start');
+    } catch (e) { toast(e.message, 4500); }
+  }, () => toast('Kunne ikke hente posisjon'), { enableHighAccuracy: true, timeout: 10000 });
+}
+function setHomeHere() {
+  if (!navigator.geolocation) return toast('Stedstjenester støttes ikke');
+  toast('Henter posisjon…');
+  navigator.geolocation.getCurrentPosition(p => {
+    DB.setSettings({ home: [p.coords.latitude, p.coords.longitude] });
+    renderHomeField();
+    toast('Hjem lagret ✓');
+  }, () => toast('Kunne ikke hente posisjon'), { enableHighAccuracy: true, timeout: 10000 });
+}
+function renderHomeField() {
+  const el = document.getElementById('home-coord');
+  if (!el) return;
+  const h = DB.settings().home;
+  el.textContent = h ? `${h[0].toFixed(4)}, ${h[1].toFixed(4)}` : 'Ikke satt';
 }
 
 function cumulative(cs) {
@@ -1661,6 +1745,11 @@ function updateNav(lat, lng) {
     ar.textContent = info[1];
     dEl.textContent = toTurn >= 1000 ? (toTurn / 1000).toFixed(1) + ' km' : Math.round(toTurn) + ' m';
     tEl.textContent = info[0] + (step.name ? ' · ' + step.name : '');
+    tEl.classList.remove('offroute');
+  } else {
+    ar.textContent = '▲';
+    dEl.textContent = remain >= 1000 ? (remain / 1000).toFixed(1) + ' km' : Math.round(remain) + ' m';
+    tEl.textContent = navRoute._rev ? 'Følg ruten (baklengs)' : 'Følg ruten';
     tEl.classList.remove('offroute');
   }
 
@@ -2033,7 +2122,7 @@ function go(v) {
   else if (v === 'ferd') { initTMap(); setTimeout(() => { tmap.invalidateSize(); drawTPlaces(); }, 60); }
   else if (v === 'steder') renderPlaces();
   else if (v === 'trofeer') renderTrophies();
-  else if (v === 'profil') { renderProfile(); loadKeyField(); }
+  else if (v === 'profil') { renderProfile(); loadKeyField(); renderHomeField(); }
 }
 
 function saveKey() {
