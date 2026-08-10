@@ -46,6 +46,17 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 .map-note p{font-size:15px;margin-bottom:4px}
 .map-note small{color:var(--text-2);font-size:13px}
 
+/* selected track sheet on map */
+.track-sheet{position:absolute;left:10px;right:10px;bottom:10px;z-index:680;background:rgba(255,255,255,.96);
+  backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:16px;box-shadow:var(--sh-md);
+  display:none;overflow:hidden;touch-action:none}
+.track-sheet.on{display:block}
+.track-sheet .grab{height:22px;display:flex;align-items:center;justify-content:center;cursor:ns-resize}
+.track-sheet .grab i{width:40px;height:4px;border-radius:2px;background:var(--border)}
+.track-sheet .head{display:flex;align-items:center;gap:8px;padding:0 12px 8px}
+.track-sheet .head b{font-size:14px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track-sheet .body{padding:0 12px 12px}
+
 /* ---- live stats ---- */
 .live{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;right:10px;z-index:600;
   display:none;justify-content:space-around;background:rgba(255,255,255,.95);backdrop-filter:blur(16px);
@@ -290,6 +301,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 .rp-item .body{flex:1;min-width:0}
 .rp-item .body b{display:block;font-size:14px;font-weight:600}
 .rp-item .body small{display:block;font-size:12px;color:var(--text-2);margin-top:1px}
+.rp-item .x{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;padding:3px 5px;flex-shrink:0}
 
 /* ---- elevation profile + ghost ---- */
 .elevcanvas{width:100%;height:64px;background:#0f1826;border-radius:12px;margin-bottom:11px;display:block}
@@ -316,6 +328,11 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
   <div id="map-note" class="map-note" style="display:none">
     <p>Ingen turer ennå</p>
     <small>Gå til <b>På Ferd</b> og start din første tur</small>
+  </div>
+  <div id="track-sheet" class="track-sheet">
+    <div class="grab" id="track-grab"><i></i></div>
+    <div class="head"><b id="ts-title">Tur</b><button class="checkin" onclick="openTrackDetail(tsId)">Rediger</button><button class="x" onclick="hideTrackSheet()">✕</button></div>
+    <div class="body" id="ts-body"></div>
   </div>
   <div id="plan" class="plan">
     <div class="plan-h"><b>Planlegg rute</b><button class="x" style="font-size:19px" onclick="closePlan()">✕</button></div>
@@ -814,6 +831,7 @@ let searchMarker = null, geoTimer = null, kartGeo = [], planGeo = [];
 let highlightId = null, tmId = null;
 let heatOn = false, heatLayer = null;
 let mapPosMarker = null, ferdPosMarker = null;
+let tsId = null, tsExpanded = false, tsDrag = null;
 
 function initMap() {
   if (map) return;
@@ -1523,7 +1541,7 @@ function renderProfChips() {
 function setProfile(k) { profile = k; renderProfChips(); clearAlts(); }
 
 function onMapTap(e) {
-  if (!planOn) { if (highlightId) { highlightId = null; drawMap(); } return; }
+  if (!planOn) { if (highlightId) { highlightId = null; drawMap(); hideTrackSheet(); } return; }
   wps.push([e.latlng.lat, e.latlng.lng]);
   clearAlts(); drawWps(); updatePlanHint(); renderWpList();
 }
@@ -1744,11 +1762,12 @@ function pickRoutePrompt() {
   const rs = DB.routes();
   const el = document.getElementById('rp-list');
   el.innerHTML = rs.length ? rs.map((r, i) => `
-    <button class="rp-item" onclick="pickRouteSheet(${i})">
+    <div class="rp-item" onclick="pickRouteSheet(${i})">
       <div class="ic" style="background:rgba(42,117,199,.1)">🧭</div>
       <div class="body"><b>${escapeHtml(r.name)}</b>
         <small>${(r.distance/1000).toFixed(1)} km · ${r.turns} svinger · ${fmtTimeShort(r.duration)}</small></div>
-    </button>`).join('') : '<div class="empty" style="padding:20px">Ingen lagrede ruter</div>';
+      <button class="x" onclick="event.stopPropagation();delRouteFromModal('${r.id}')">✕</button>
+    </div>`).join('') : '<div class="empty" style="padding:20px">Ingen lagrede ruter</div>';
   document.getElementById('routeModal').classList.add('on');
 }
 function pickRouteSheet(i) {
@@ -1757,6 +1776,10 @@ function pickRouteSheet(i) {
   closeRouteModal();
 }
 function closeRouteModal() { document.getElementById('routeModal').classList.remove('on'); }
+function delRouteFromModal(id) {
+  delRoute(id);
+  pickRoutePrompt();
+}
 
 function useRoute(r) {
   navRoute = r;
@@ -2199,8 +2222,62 @@ function paceFmt(speed) {
 }
 function showTrackOnMap(id) {
   highlightId = id;
+  tsId = id;
   go('kart');
-  setTimeout(() => { map.invalidateSize(); drawMap(); }, 90);
+  setTimeout(() => { map.invalidateSize(); drawMap(); showTrackSheet(id); }, 90);
+}
+function trackSpeedText(t) {
+  const avg = t.avgSpeed || ((t.movingTime || 0) > 0 ? (t.distance / t.movingTime) : 0);
+  return t.type === 'Ride'
+    ? (avg > 0 ? (avg * 3.6).toFixed(1) + ' km/t' : '–')
+    : paceFmt(avg);
+}
+function showTrackSheet(id) {
+  const t = DB.tracks().find(x => x.id === id);
+  const sheet = document.getElementById('track-sheet');
+  if (!t || !sheet) return;
+  tsId = id;
+  document.getElementById('ts-title').textContent = t.name || 'Tur';
+  document.getElementById('ts-body').innerHTML =
+    `<div class="tstats">` +
+    `<div><small>Distanse</small><b>${fmtDist(t.distance || 0)}</b></div>` +
+    `<div><small>Tid</small><b>${fmtTime(t.movingTime || 0)}</b></div>` +
+    `<div><small>${t.type === 'Ride' ? 'Snittfart' : 'Tempo'}</small><b>${trackSpeedText(t)}</b></div>` +
+    `</div><small style="display:block;color:var(--text-2);margin-top:8px">${fmtDate(t.date)}</small>`;
+  sheet.classList.add('on');
+  setTrackSheetHeight(tsExpanded ? 178 : 94);
+}
+function hideTrackSheet() {
+  const sheet = document.getElementById('track-sheet');
+  if (sheet) sheet.classList.remove('on');
+  tsId = null;
+}
+function setTrackSheetHeight(h) {
+  const sheet = document.getElementById('track-sheet');
+  if (!sheet) return;
+  const clamped = Math.max(68, Math.min(220, h));
+  sheet.style.height = clamped + 'px';
+  tsExpanded = clamped > 130;
+}
+function initTrackSheetDrag() {
+  const grab = document.getElementById('track-grab');
+  if (!grab || grab._bound) return;
+  grab._bound = true;
+  grab.addEventListener('pointerdown', e => {
+    const sheet = document.getElementById('track-sheet');
+    if (!sheet || !sheet.classList.contains('on')) return;
+    tsDrag = { y: e.clientY, h: sheet.getBoundingClientRect().height };
+    grab.setPointerCapture(e.pointerId);
+  });
+  grab.addEventListener('pointermove', e => {
+    if (!tsDrag) return;
+    const dy = tsDrag.y - e.clientY;
+    setTrackSheetHeight(tsDrag.h + dy);
+  });
+  const stop = () => { tsDrag = null; };
+  grab.addEventListener('pointerup', stop);
+  grab.addEventListener('pointercancel', stop);
+  grab.addEventListener('dblclick', () => setTrackSheetHeight(tsExpanded ? 94 : 178));
 }
 function openTrackDetail(id) {
   const t = DB.tracks().find(x => x.id === id);
@@ -2245,8 +2322,11 @@ function changeTrackType(newType) {
 function trackToRoute() {
   const t = DB.tracks().find(x => x.id === tmId);
   if (!t || !t.coords || t.coords.length < 2) return;
+  const suggested = (t.name || 'Tur') + ' (rute)';
+  const name = (prompt('Navn på ny rute:', suggested) || '').trim();
+  if (!name) return toast('Ruten må ha et navn');
   DB.addRoute({
-    id: 'r' + Date.now(), name: (t.name || 'Rute') + ' (fra tur)',
+    id: 'r' + Date.now(), name,
     profile: t.type === 'Ride' ? 'cycling-regular' : t.type === 'Hike' ? 'foot-hiking' : 'foot-walking',
     waypoints: [t.coords[0], t.coords[t.coords.length - 1]],
     coords: t.coords, steps: [], elevation: null,
@@ -2446,6 +2526,7 @@ function escapeHtml(s) {
   }
 
   initMap();
+  initTrackSheetDrag();
   setType('Ride');
   setFerdMode('fri');
   renderProfChips();
