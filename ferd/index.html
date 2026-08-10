@@ -290,6 +290,11 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 .rp-item .body{flex:1;min-width:0}
 .rp-item .body b{display:block;font-size:14px;font-weight:600}
 .rp-item .body small{display:block;font-size:12px;color:var(--text-2);margin-top:1px}
+
+/* ---- elevation profile + ghost ---- */
+.elevcanvas{width:100%;height:64px;background:#0f1826;border-radius:12px;margin-bottom:11px;display:block}
+.nav-ghost{font-family:var(--mono);font-size:12px;font-weight:600;text-align:center;margin-top:7px}
+.ghost-pin{font-size:20px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
 </style>
 </head>
 <body>
@@ -341,6 +346,8 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
   <div class="tmap-btns">
     <button id="b-base-ferd" class="mbtn" onclick="onToggleBase('ferd')">◱ Satellitt</button>
     <button class="mbtn" onclick="locateFerd()">⊕ Posisjon</button>
+    <button id="b-elev" class="mbtn" onclick="toggleElev()" style="display:none">⛰️ Høyde</button>
+    <button id="b-ghost" class="mbtn" onclick="toggleGhost()" style="display:none">👻 Spøkelse</button>
   </div>
   <div id="paused" class="paused-tag">⏸ Pauset</div>
 
@@ -350,6 +357,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
       <div class="tx"><b id="nav-d">–</b><small id="nav-t">Følger ruten</small></div>
     </div>
     <div class="nav-meta"><span id="nav-rem">–</span><span id="nav-eta">–</span></div>
+    <div id="nav-ghost" class="nav-ghost"></div>
     <div class="nav-bar"><i id="nav-bar" style="width:0%"></i></div>
   </div>
   <div id="viewtog" class="viewtog"><button class="mbtn" onclick="toggleNavView()">🧭 POV</button></div>
@@ -374,6 +382,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
       <div class="lv"><b id="l-time">0:00</b><span>tid</span></div>
       <div class="lv"><b id="l-speed">–</b><span id="l-speed-u">tempo</span></div>
     </div>
+    <canvas id="elevcanvas" class="elevcanvas" style="display:none"></canvas>
     <div id="stop-row" class="ctrl-row" style="display:none">
       <button class="rbtn place" onclick="openPlaceModal()" title="Lagre sted">📍</button>
       <button id="pause-btn" class="rbtn pause" onclick="togglePause()" title="Pause">❚❚</button>
@@ -454,7 +463,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
     <button class="wide" onclick="document.getElementById('imp').click()">⬆ Importer fra fil</button>
     <input type="file" id="imp" accept=".json,application/json" style="display:none" onchange="importAll(event)">
     <button class="wide danger" onclick="wipeAll()">🗑 Slett alle data</button>
-    <p class="ver">Ferd v2.1 · frittstående · ingen innlogging</p>
+    <p class="ver">Ferd v2.2 · frittstående · ingen innlogging</p>
   </div>
 </section>
 
@@ -506,6 +515,18 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
   </div>
 </div>
 
+<!-- ══════════ MODAL: lagre/forkast økt ══════════ -->
+<div id="stopModal" class="modal">
+  <div class="sheet">
+    <h3>Lagre økten?</h3>
+    <div class="coord" id="ss-summary" style="font-size:15px;color:var(--text)"></div>
+    <div class="sheet-btns">
+      <button class="sb-cancel" onclick="finishSession(false)">Forkast</button>
+      <button class="sb-save" onclick="finishSession(true)">Lagre</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -548,7 +569,7 @@ const typeLabel = t => (TYPES[t] || {}).label || t;
 
 /* ---------- Storage ---------- */
 const K_TRACKS = 'ferd_tracks', K_PLACES = 'ferd_places', K_UNLOCK = 'ferd_unlocked';
-const K_ROUTES = 'ferd_routes', K_SET = 'ferd_settings';
+const K_ROUTES = 'ferd_routes', K_SET = 'ferd_settings', K_GHOST = 'ferd_ghosts';
 
 const DB = {
   read(key, fallback) {
@@ -580,9 +601,12 @@ const DB = {
   routes() { return this.read(K_ROUTES, []); },
   addRoute(r) { const a = this.read(K_ROUTES, []); a.push(r); return this.write(K_ROUTES, a); },
   delRoute(id) { this.write(K_ROUTES, this.read(K_ROUTES, []).filter(r => r.id !== id)); },
+  ghosts() { return this.read(K_GHOST, {}); },
+  ghost(id) { return this.ghosts()[id] || null; },
+  setGhost(id, g) { const a = this.ghosts(); a[id] = g; this.write(K_GHOST, a); },
   settings() { return this.read(K_SET, {}); },
   setSettings(o) { this.write(K_SET, Object.assign(this.settings(), o)); },
-  wipe() { [K_TRACKS, K_PLACES, K_UNLOCK, K_ROUTES].forEach(k => localStorage.removeItem(k)); },
+  wipe() { [K_TRACKS, K_PLACES, K_UNLOCK, K_ROUTES, K_GHOST].forEach(k => localStorage.removeItem(k)); },
 };
 
 /* ---------- Utils ---------- */
@@ -983,18 +1007,38 @@ function toggleFog() {
   else if (fog) map.removeLayer(fog);
 }
 
-/* ---- Heatmap (intensity of everywhere you've been) ---- */
+/* Aggregate coords into ~100m cells; weight by how many separate ferds overlap. */
+function heatPoints() {
+  const cells = new Map();
+  for (const t of DB.tracks()) {
+    const seen = new Set();
+    for (const c of (t.coords || [])) {
+      const cs = lngCellSize(c[0]);
+      const cy = Math.floor(c[0] / CFG.CELL), cx = Math.floor(c[1] / cs);
+      const k = cy + ':' + cx;
+      if (seen.has(k)) continue;            // count each ferd once per cell
+      seen.add(k);
+      const e = cells.get(k);
+      if (e) e.n++;
+      else cells.set(k, { lat: (cy + 0.5) * CFG.CELL, lng: (cx + 0.5) * cs, n: 1 });
+    }
+  }
+  // 1 pass = cold (~0.2), warmer per overlapping ferd, hot at 5+
+  return [...cells.values()].map(e => [e.lat, e.lng, Math.min(1, e.n / 5)]);
+}
 function toggleHeat() {
   if (!L.heatLayer) { toast('Heatmap kunne ikke lastes'); return; }
   heatOn = !heatOn;
   const b = document.getElementById('b-heat');
   b.classList.toggle('on', heatOn);
   if (heatOn) {
-    const pts = [];
-    for (const t of DB.tracks()) for (const c of (t.coords || [])) pts.push([c[0], c[1], 0.6]);
+    const pts = heatPoints();
     if (!pts.length) { toast('Ingen turer å vise'); heatOn = false; b.classList.remove('on'); return; }
     if (heatLayer) map.removeLayer(heatLayer);
-    heatLayer = L.heatLayer(pts, { radius: 18, blur: 16, maxZoom: 17, minOpacity: .3 }).addTo(map);
+    heatLayer = L.heatLayer(pts, {
+      radius: 16, blur: 12, maxZoom: 17, max: 1, minOpacity: .25,
+      gradient: { 0.0: '#3b82f6', 0.35: '#22c55e', 0.6: '#eab308', 0.85: '#ef4444' },
+    }).addTo(map);
   } else if (heatLayer) { map.removeLayer(heatLayer); }
 }
 
@@ -1004,6 +1048,7 @@ let active = false, paused = false, type = 'Walk';
 let watchId = null, tickId = null, wakeLock = null;
 let coords = [], dist = 0, tStart = 0, movingMs = 0, lastFixTime = 0, lastMoveTime = 0, curSpeed = 0;
 let sessionVisits = new Set();
+let pendingSession = null, elevOn = false, ghostOn = false, curGhost = null, ghostMarker = null, runSamples = [], navDone = 0;
 
 function initTMap() {
   if (tmap) return;
@@ -1082,10 +1127,17 @@ function startTrack() {
   document.getElementById('ferd-modes').style.display = 'none';
   document.getElementById('rsel-wrap').style.display = 'none';
   document.getElementById('btn-home').style.display = 'none';
+  runSamples = [];
+  if (ghostMarker) { tmap.removeLayer(ghostMarker); ghostMarker = null; }
+  curGhost = navRoute ? DB.ghost(ghostKey(navRoute)) : null;
   if (navRoute) {
     navIdx = 0;
     document.getElementById('navcard').classList.add('on');
     document.getElementById('viewtog').classList.add('on');
+    document.getElementById('b-elev').style.display = 'block';
+    document.getElementById('b-ghost').style.display = 'block';
+    const ng = document.getElementById('nav-ghost'); if (ng) ng.textContent = '';
+    if (elevOn) setTimeout(drawElevation, 60);
   }
   gps('Venter på GPS…', '');
 
@@ -1112,16 +1164,20 @@ function onFix(pos) {
     return;
   }
   gps(paused ? 'Pauset — beveg deg for å fortsette' : 'Sporer…', paused ? 'warn' : 'ok');
-  curSpeed = speed || 0;
 
   const pt = [lat, lng];
   if (!coords.length) {
+    curSpeed = (speed && speed > 0) ? speed : 0;
     coords.push(pt);
     lastFixTime = now; lastMoveTime = now;
   } else {
     const prev = coords[coords.length - 1];
     const d = haversine(prev[0], prev[1], lat, lng);
     if (d > CFG.MAX_JUMP) { lastFixTime = now; return; }   // implausible jump
+    // Derive speed from movement when the device doesn't report coords.speed
+    const dtS = lastFixTime ? (now - lastFixTime) / 1000 : 0;
+    if (speed && speed > 0) curSpeed = speed;
+    else if (dtS > 0.4) { const inst = d / dtS; curSpeed = curSpeed > 0 ? curSpeed * 0.5 + inst * 0.5 : inst; }
     if (d >= CFG.MIN_POINT_DIST) {
       dist += d;
       coords.push(pt);
@@ -1200,24 +1256,6 @@ function stopTrack() {
   const elapsed = Math.round((Date.now() - tStart) / 1000);
   const moving = Math.round(movingMs / 1000);
 
-  if (coords.length >= 2 && dist > 20) {
-    const ok = DB.addTrack({
-      id: String(Date.now()),
-      name: `På Ferd – ${typeLabel(type)}`,
-      type, coords, distance: dist,
-      movingTime: moving || elapsed,
-      elapsedTime: elapsed,
-      date: new Date().toISOString(),
-      avgSpeed: moving > 0 ? dist / moving : 0,
-    });
-    if (ok) {
-      toast(`Tur lagret · ${fmtDist(dist)} på ${fmtTime(moving || elapsed)}`, 3500);
-      setTimeout(() => evalAchievements(true), 900);
-    }
-  } else {
-    toast('Turen var for kort til å lagres');
-  }
-
   document.getElementById('b-start').style.display = 'block';
   document.getElementById('stop-row').style.display = 'none';
   document.getElementById('chips').style.display = 'flex';
@@ -1228,8 +1266,61 @@ function stopTrack() {
   document.getElementById('navcard').classList.remove('on');
   document.getElementById('viewtog').classList.remove('on');
   document.getElementById('paused').classList.remove('on');
+  document.getElementById('b-elev').style.display = 'none';
+  document.getElementById('b-ghost').style.display = 'none';
+  document.getElementById('elevcanvas').style.display = 'none';
+  elevOn = false; document.getElementById('b-elev').classList.remove('on');
+  ghostOn = false; document.getElementById('b-ghost').classList.remove('on');
+  if (ghostMarker) { tmap.removeLayer(ghostMarker); ghostMarker = null; }
   gps('', '');
+
+  if (coords.length >= 2 && dist > 20) {
+    pendingSession = { coords: coords.slice(), dist, moving, elapsed, type, route: navRoute, samples: runSamples.slice() };
+    document.getElementById('ss-summary').textContent = `${fmtDist(dist)} · ${fmtTime(moving || elapsed)}`;
+    document.getElementById('stopModal').classList.add('on');
+  } else {
+    toast('Turen var for kort til å lagres');
+    if (tMarker) { tmap.removeLayer(tMarker); tMarker = null; }
+    if (tLine) tLine.setLatLngs([]);
+    drawMap();
+  }
+}
+
+function finishSession(save) {
+  document.getElementById('stopModal').classList.remove('on');
+  const ps = pendingSession; pendingSession = null;
+  if (!ps) return;
+  if (save) {
+    const ok = DB.addTrack({
+      id: String(Date.now()),
+      name: `På Ferd – ${typeLabel(ps.type)}`,
+      type: ps.type, coords: ps.coords, distance: ps.dist,
+      movingTime: ps.moving || ps.elapsed, elapsedTime: ps.elapsed,
+      date: new Date().toISOString(),
+      avgSpeed: ps.moving > 0 ? ps.dist / ps.moving : 0,
+    });
+    if (ok) {
+      toast(`Tur lagret · ${fmtDist(ps.dist)} på ${fmtTime(ps.moving || ps.elapsed)}`, 3500);
+      setTimeout(() => evalAchievements(true), 900);
+    }
+    // Save a new personal best (ghost) if we followed most of a route faster than before
+    if (ps.route && ps.samples && ps.samples.length) {
+      const reached = ps.samples[ps.samples.length - 1][1];
+      const routeLen = ps.route.distance || 0;
+      if (routeLen > 0 && reached >= routeLen * 0.9) {
+        const key = ghostKey(ps.route);
+        const prev = DB.ghost(key);
+        if (!prev || ps.moving < prev.time) {
+          DB.setGhost(key, { time: ps.moving, samples: ps.samples });
+          toast('Ny bestetid! 👻 lagret for ruten', 3500);
+        }
+      }
+    }
+  } else {
+    toast('Økten forkastet');
+  }
   if (tMarker) { tmap.removeLayer(tMarker); tMarker = null; }
+  if (tLine) tLine.setLatLngs([]);
   drawMap();
 }
 
@@ -1302,7 +1393,9 @@ async function orsRoute(prof, waypoints, wantAlts) {
 }
 
 function parseFeature(f) {
-  const coords = (f.geometry.coordinates || []).map(c => [c[1], c[0]]);
+  const raw = f.geometry.coordinates || [];
+  const coords = raw.map(c => [c[1], c[0]]);
+  const elevation = raw.some(c => c.length > 2) ? raw.map(c => (c[2] != null ? c[2] : 0)) : null;
   const p = f.properties || {}, sum = p.summary || {};
   const steps = [];
   for (const seg of (p.segments || []))
@@ -1314,7 +1407,7 @@ function parseFeature(f) {
         wp: st.way_points || [0, 0],
       });
   return {
-    coords, steps,
+    coords, steps, elevation,
     distance: sum.distance || 0,
     duration: sum.duration || 0,
     ascent: Math.round(p.ascent || 0),
@@ -1518,7 +1611,7 @@ function saveRoute() {
   if (!name) return;
   DB.addRoute({
     id: String(Date.now()), name, profile,
-    waypoints: wps.slice(), coords: r.coords, steps: r.steps,
+    waypoints: wps.slice(), coords: r.coords, steps: r.steps, elevation: r.elevation,
     distance: r.distance, duration: r.duration, ascent: r.ascent, turns: r.turns,
     created: new Date().toISOString(),
   });
@@ -1627,6 +1720,7 @@ function flipRoute() {
   if (!navRoute) return;
   navRoute = Object.assign({}, navRoute, {
     coords: navRoute.coords.slice().reverse(),
+    elevation: navRoute.elevation ? navRoute.elevation.slice().reverse() : null,
     steps: [],
     _rev: !navRoute._rev,
   });
@@ -1760,6 +1854,106 @@ function updateNav(lat, lng) {
   document.getElementById('nav-eta').textContent =
     'Fremme ' + eta.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
   document.getElementById('nav-bar').style.width = Math.min(100, done / total * 100) + '%';
+
+  navDone = done;
+  if (active) runSamples.push([movingMs / 1000, done]);
+  if (ghostOn && curGhost) updateGhost(done);
+  if (elevOn) drawElevation();
+}
+
+function ghostKey(r) { return r.id + (r._rev ? ':r' : ''); }
+
+/* ---- elevation profile ---- */
+function toggleElev() {
+  elevOn = !elevOn;
+  document.getElementById('b-elev').classList.toggle('on', elevOn);
+  document.getElementById('elevcanvas').style.display = elevOn ? 'block' : 'none';
+  if (elevOn) setTimeout(drawElevation, 40);
+}
+function drawElevation() {
+  const cv = document.getElementById('elevcanvas');
+  if (!cv || cv.style.display === 'none') return;
+  const w = cv.clientWidth, h = cv.clientHeight;
+  if (!w || !h) return;
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = w * dpr; cv.height = h * dpr;
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const ele = navRoute && navRoute.elevation;
+  if (!ele || ele.length < 2) {
+    ctx.fillStyle = '#64748b'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Ingen høydedata for denne ruten', w / 2, h / 2);
+    return;
+  }
+  const min = Math.min(...ele), max = Math.max(...ele), rng = Math.max(1, max - min), n = ele.length;
+  const X = i => i / (n - 1) * w;
+  const Y = e => h - 6 - (e - min) / rng * (h - 14);
+  ctx.beginPath(); ctx.moveTo(0, h);
+  for (let i = 0; i < n; i++) ctx.lineTo(X(i), Y(ele[i]));
+  ctx.lineTo(w, h); ctx.closePath();
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, 'rgba(77,182,247,.5)'); g.addColorStop(1, 'rgba(77,182,247,.04)');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) { const px = X(i), py = Y(ele[i]); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+  ctx.strokeStyle = '#4DB6F7'; ctx.lineWidth = 1.5; ctx.stroke();
+  const idx = Math.min(Math.max(0, navIdx), n - 1), mx = X(idx);
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(mx, 0); ctx.lineTo(mx, h); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mx, Y(ele[idx]), 4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#94a3b8'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+  ctx.fillText(Math.round(max) + ' m', 4, 11);
+  ctx.fillText(Math.round(min) + ' m', 4, h - 4);
+}
+
+/* ---- ghost: race your own best time on a route ---- */
+function toggleGhost() {
+  if (!navRoute) return;
+  ghostOn = !ghostOn;
+  document.getElementById('b-ghost').classList.toggle('on', ghostOn);
+  if (ghostOn && !curGhost) toast('Ingen bestetid lagret ennå — fullfør ruten én gang først');
+  if (!ghostOn && ghostMarker) { tmap.removeLayer(ghostMarker); ghostMarker = null; }
+  const el = document.getElementById('nav-ghost'); if (el && !ghostOn) el.textContent = '';
+}
+function updateGhost(done) {
+  const gd = ghostDistAt(curGhost, movingMs / 1000);
+  const gp = coordAtDist(navRoute.coords, navCum, gd);
+  if (gp) {
+    if (ghostMarker) ghostMarker.setLatLng(gp);
+    else ghostMarker = L.marker(gp, { icon: L.divIcon({ className: '', html: '<div class="ghost-pin">👻</div>', iconSize: [28, 28], iconAnchor: [14, 14] }) }).addTo(tmap);
+  }
+  const delta = done - gd;
+  const el = document.getElementById('nav-ghost');
+  if (el) {
+    el.textContent = (delta >= 0 ? '▲ ' : '▼ ') + Math.abs(Math.round(delta)) + ' m ' + (delta >= 0 ? 'foran best' : 'bak best');
+    el.style.color = delta >= 0 ? '#86efac' : '#fca5a5';
+  }
+}
+function ghostDistAt(g, t) {
+  const s = g && g.samples;
+  if (!s || !s.length) return 0;
+  if (t <= s[0][0]) return s[0][1];
+  if (t >= s[s.length - 1][0]) return s[s.length - 1][1];
+  for (let i = 1; i < s.length; i++) {
+    if (s[i][0] >= t) {
+      const a = s[i - 1], b = s[i], f = (t - a[0]) / Math.max(0.001, b[0] - a[0]);
+      return a[1] + (b[1] - a[1]) * f;
+    }
+  }
+  return s[s.length - 1][1];
+}
+function coordAtDist(coords, cum, d) {
+  if (!coords.length) return null;
+  if (d <= 0) return coords[0];
+  const total = cum[cum.length - 1];
+  if (d >= total) return coords[coords.length - 1];
+  for (let i = 1; i < cum.length; i++) {
+    if (cum[i] >= d) {
+      const a = coords[i - 1], b = coords[i], f = (d - cum[i - 1]) / Math.max(0.001, cum[i] - cum[i - 1]);
+      return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+    }
+  }
+  return coords[coords.length - 1];
 }
 
 /* ═══════════ PLACES ═══════════ */
@@ -1972,8 +2166,23 @@ function openTrackDetail(id) {
     `<div class="card"><div class="lab">Punkter</div><div class="val">${(t.coords||[]).length}</div></div>` +
     `<div class="card"><div class="lab">Utforsket</div><div class="val">${km2}<i>km²</i></div></div>` +
     `</div>` +
-    `<button class="wide danger" style="margin-top:14px" onclick="delTrackFromModal()">🗑 Slett denne turen</button>`;
+    `<button class="wide" style="margin-top:14px;border-color:var(--green);color:var(--green-dark);font-weight:600" onclick="trackToRoute()">🧭 Lagre som rute å følge</button>` +
+    `<button class="wide danger" style="margin-top:8px" onclick="delTrackFromModal()">🗑 Slett denne turen</button>`;
   document.getElementById('trackModal').classList.add('on');
+}
+function trackToRoute() {
+  const t = DB.tracks().find(x => x.id === tmId);
+  if (!t || !t.coords || t.coords.length < 2) return;
+  DB.addRoute({
+    id: 'r' + Date.now(), name: (t.name || 'Rute') + ' (fra tur)',
+    profile: t.type === 'Ride' ? 'cycling-regular' : t.type === 'Hike' ? 'foot-hiking' : 'foot-walking',
+    waypoints: [t.coords[0], t.coords[t.coords.length - 1]],
+    coords: t.coords, steps: [], elevation: null,
+    distance: t.distance, duration: t.movingTime || 0, ascent: 0, turns: 0,
+    created: new Date().toISOString(), fromTrack: t.id,
+  });
+  closeTrackModal();
+  toast('Lagret som rute — velg den under Følg rute');
 }
 function closeTrackModal() { document.getElementById('trackModal').classList.remove('on'); }
 function tmShowOnMap() { if (tmId) { closeTrackModal(); highlightTrack(tmId); } }
