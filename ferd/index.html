@@ -370,10 +370,10 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
     <div id="rsel-wrap"></div>
     <button class="wide" id="btn-home" style="margin-top:0;border-color:var(--blue);color:var(--blue);font-weight:600" onclick="goHome()">🏠 Ferd hjem</button>
     <div id="chips" class="chips">
-      <button class="chip on" data-t="Walk" onclick="setType('Walk')">🚶 Gange</button>
+      <button class="chip" data-t="Walk" onclick="setType('Walk')">🚶 Gange</button>
       <button class="chip" data-t="Run" onclick="setType('Run')">🏃 Løping</button>
       <button class="chip" data-t="Hike" onclick="setType('Hike')">🥾 Fjelltur</button>
-      <button class="chip" data-t="Ride" onclick="setType('Ride')">🚴 Sykkel</button>
+      <button class="chip on" data-t="Ride" onclick="setType('Ride')">🚴 Sykkel</button>
     </div>
     <div id="gps" class="gps"></div>
     <button id="b-start" class="big start" onclick="startTrack()">▶ Start Ferd</button>
@@ -530,7 +530,6 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 <div id="toast"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════
    FERD — standalone exploration app
@@ -814,6 +813,7 @@ let map = null, trackLayer = null, placeLayer = null, fogOn = false, fog = null;
 let searchMarker = null, geoTimer = null, kartGeo = [], planGeo = [];
 let highlightId = null, tmId = null;
 let heatOn = false, heatLayer = null;
+let mapPosMarker = null, ferdPosMarker = null;
 
 function initMap() {
   if (map) return;
@@ -838,20 +838,22 @@ function drawMap() {
   document.getElementById('map-note').style.display = tracks.length ? 'none' : 'block';
 
   const bounds = [];
-  const hl = highlightId && tracks.some(t => t.id === highlightId);
   for (const t of tracks) {
     if (!t.coords || t.coords.length < 2) continue;
     const isHl = t.id === highlightId;
-    L.polyline(t.coords, {
+    const line = L.polyline(t.coords, {
       color: typeColor(t.type),
-      weight: isHl ? 6 : 3,
-      opacity: (hl && !isHl) ? .18 : (isHl ? 1 : .8),
+      weight: isHl ? 5 : 3,
+      opacity: isHl ? 1 : .8,
       smoothFactor: 1,
       interactive: false,
     }).addTo(trackLayer);
+    if (isHl) {
+      line.bindPopup(`<b>${escapeHtml(t.name || 'Tur')}</b><br>${typeLabel(t.type)} · ${fmtDist(t.distance)} · ${fmtTime(t.movingTime)}<br><small>${fmtDate(t.date)}</small>`);
+    }
     L.polyline(t.coords, { color: '#000', weight: 20, opacity: 0 })
-      .on('click', () => openTrackDetail(t.id)).addTo(trackLayer);
-    if (!hl || isHl) bounds.push(...t.coords);
+      .on('click', () => showTrackOnMap(t.id)).addTo(trackLayer);
+    bounds.push(...t.coords);
   }
 
   for (const p of DB.places()) {
@@ -865,7 +867,18 @@ function drawMap() {
     bounds.push([p.lat, p.lng]);
   }
 
-  if (bounds.length) map.fitBounds(L.latLngBounds(bounds).pad(.12));
+  if (bounds.length) {
+    if (highlightId) {
+      const t = tracks.find(x => x.id === highlightId);
+      if (t && t.coords && t.coords.length > 1) {
+        map.fitBounds(L.latLngBounds(t.coords).pad(.12));
+        const sel = trackLayer.getLayers().find(x => x.getPopup && x.getPopup());
+        if (sel) setTimeout(() => sel.openPopup(), 40);
+      } else {
+        map.fitBounds(L.latLngBounds(bounds).pad(.12));
+      }
+    } else map.fitBounds(L.latLngBounds(bounds).pad(.12));
+  }
   if (fogOn && fog) fog._reset();
 }
 
@@ -876,7 +889,8 @@ function locateMe() {
     p => {
       const ll = [p.coords.latitude, p.coords.longitude];
       map.setView(ll, 15);
-      L.circleMarker(ll, { radius: 8, color: '#fff', weight: 2, fillColor: '#2A75C7', fillOpacity: 1 }).addTo(map);
+      if (mapPosMarker) mapPosMarker.setLatLng(ll);
+      else mapPosMarker = L.circleMarker(ll, { radius: 8, color: '#fff', weight: 2, fillColor: '#2A75C7', fillOpacity: 1 }).addTo(map);
     },
     () => toast('Kunne ikke hente posisjon'),
     { enableHighAccuracy: true, timeout: 10000 }
@@ -938,7 +952,12 @@ function pickGeo(which, i) {
 function locateFerd() {
   if (!navigator.geolocation) return toast('Stedstjenester støttes ikke');
   navigator.geolocation.getCurrentPosition(
-    p => tmap.setView([p.coords.latitude, p.coords.longitude], 16),
+    p => {
+      const ll = [p.coords.latitude, p.coords.longitude];
+      tmap.setView(ll, 16);
+      if (ferdPosMarker) ferdPosMarker.setLatLng(ll);
+      else ferdPosMarker = L.circleMarker(ll, { radius: 8, color: '#fff', weight: 2, fillColor: '#2A75C7', fillOpacity: 1 }).addTo(tmap);
+    },
     () => toast('Kunne ikke hente posisjon'),
     { enableHighAccuracy: true, timeout: 10000 });
 }
@@ -1007,44 +1026,82 @@ function toggleFog() {
   else if (fog) map.removeLayer(fog);
 }
 
-/* Aggregate coords into ~100m cells; weight by how many separate ferds overlap. */
-function heatPoints() {
+/* Count how many separate PASSES cover each ~100m cell (re-entering a cell counts again). */
+function passCounts() {
   const cells = new Map();
   for (const t of DB.tracks()) {
-    const seen = new Set();
+    let prev = null;
     for (const c of (t.coords || [])) {
       const cs = lngCellSize(c[0]);
       const cy = Math.floor(c[0] / CFG.CELL), cx = Math.floor(c[1] / cs);
       const k = cy + ':' + cx;
-      if (seen.has(k)) continue;            // count each ferd once per cell
-      seen.add(k);
+      if (k === prev) continue;          // still in the same cell — not a new pass
+      prev = k;
       const e = cells.get(k);
       if (e) e.n++;
       else cells.set(k, { lat: (cy + 0.5) * CFG.CELL, lng: (cx + 0.5) * cs, n: 1 });
     }
   }
-  // 1 pass = cold (~0.2), warmer per overlapping ferd, hot at 5+
-  return [...cells.values()].map(e => [e.lat, e.lng, Math.min(1, e.n / 5)]);
+  return cells;
 }
+/* Fixed colour per pass count — two passes is NOT red. */
+function heatColor(n) {
+  if (n <= 1) return '#3b82f6';
+  if (n === 2) return '#22c55e';
+  if (n === 3) return '#84cc16';
+  if (n === 4) return '#eab308';
+  if (n <= 6) return '#f97316';
+  return '#ef4444';
+}
+/* Canvas overlay: uniform colour per cell, meter-based width (like the fog). */
+const HeatCanvas = L.Layer.extend({
+  onAdd(m) {
+    this._map = m;
+    this._c = L.DomUtil.create('canvas', 'fog-canvas');
+    m.getPane('overlayPane').appendChild(this._c);
+    Object.assign(this._c.style, { position: 'absolute', pointerEvents: 'none', zIndex: 410, opacity: 0.72 });
+    m.on('moveend zoomend resize', this._reset, this);
+    this._reset();
+  },
+  onRemove(m) { L.DomUtil.remove(this._c); m.off('moveend zoomend resize', this._reset, this); },
+  _reset() {
+    const s = this._map.getSize();
+    L.DomUtil.setPosition(this._c, this._map.containerPointToLayerPoint([0, 0]));
+    this._c.width = s.x; this._c.height = s.y;
+    this._draw();
+  },
+  _draw() {
+    const ctx = this._c.getContext('2d');
+    const { x: w, y: h } = this._map.getSize();
+    ctx.clearRect(0, 0, w, h);
+    const zoom = this._map.getZoom(), ctr = this._map.getCenter();
+    const r = Math.max(4, metersToPx(60, ctr.lat, zoom));
+    // draw lower counts first so busier stretches sit on top
+    const list = [...passCounts().values()].sort((a, b) => a.n - b.n);
+    for (const e of list) {
+      const p = this._map.latLngToContainerPoint([e.lat, e.lng]);
+      if (p.x < -r || p.x > w + r || p.y < -r || p.y > h + r) continue;
+      ctx.fillStyle = heatColor(e.n);
+      ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+    }
+  },
+});
 function toggleHeat() {
-  if (!L.heatLayer) { toast('Heatmap kunne ikke lastes'); return; }
   heatOn = !heatOn;
   const b = document.getElementById('b-heat');
   b.classList.toggle('on', heatOn);
   if (heatOn) {
-    const pts = heatPoints();
-    if (!pts.length) { toast('Ingen turer å vise'); heatOn = false; b.classList.remove('on'); return; }
-    if (heatLayer) map.removeLayer(heatLayer);
-    heatLayer = L.heatLayer(pts, {
-      radius: 16, blur: 12, maxZoom: 17, max: 1, minOpacity: .25,
-      gradient: { 0.0: '#3b82f6', 0.35: '#22c55e', 0.6: '#eab308', 0.85: '#ef4444' },
-    }).addTo(map);
-  } else if (heatLayer) { map.removeLayer(heatLayer); }
+    if (!DB.tracks().length) { toast('Ingen turer å vise'); heatOn = false; b.classList.remove('on'); return; }
+    if (!heatLayer) heatLayer = new HeatCanvas();
+    map.addLayer(heatLayer);
+  } else if (heatLayer) {
+    map.removeLayer(heatLayer);
+  }
 }
 
 /* ═══════════ TRACKING (På Ferd tab) ═══════════ */
 let tmap = null, tLine = null, tMarker = null, tPlaceLayer = null;
-let active = false, paused = false, type = 'Walk';
+let active = false, paused = false, type = 'Ride';
 let watchId = null, tickId = null, wakeLock = null;
 let coords = [], dist = 0, tStart = 0, movingMs = 0, lastFixTime = 0, lastMoveTime = 0, curSpeed = 0;
 let sessionVisits = new Set();
@@ -2116,11 +2173,12 @@ function renderProfile() {
   // track list
   const tracks = DB.tracks();
   document.getElementById('p-tracklist').innerHTML = tracks.length
-    ? tracks.map(t => `<div class="item" style="cursor:pointer" onclick="openTrackDetail('${t.id}')">
+    ? tracks.map(t => `<div class="item" style="cursor:pointer" onclick="showTrackOnMap('${t.id}')">
         <div class="ic" style="background:${typeColor(t.type)}1a">${
           t.type === 'Ride' ? '🚴' : t.type === 'Run' ? '🏃' : t.type === 'Hike' ? '🥾' : '🚶'}</div>
         <div class="body"><b>${escapeHtml(t.name || 'Tur')}</b>
           <small>${fmtDate(t.date)} · ${fmtDist(t.distance)} · ${fmtTime(t.movingTime)}</small></div>
+        <button class="checkin" onclick="event.stopPropagation();openTrackDetail('${t.id}')">Rediger</button>
         <button class="x" onclick="event.stopPropagation();delTrack('${t.id}')">✕</button>
       </div>`).join('')
     : '<div class="empty" style="padding:20px">Ingen turer ennå.</div>';
@@ -2139,7 +2197,7 @@ function paceFmt(speed) {
   const mi = Math.floor(pace), se = Math.round((pace - mi) * 60);
   return `${mi}:${String(se).padStart(2,'0')} /km`;
 }
-function highlightTrack(id) {
+function showTrackOnMap(id) {
   highlightId = id;
   go('kart');
   setTimeout(() => { map.invalidateSize(); drawMap(); }, 90);
@@ -2153,6 +2211,8 @@ function openTrackDetail(id) {
   const avg = t.avgSpeed || (moving > 0 ? (t.distance / moving) : 0);
   const speedStr = t.type === 'Ride' ? (avg > 0 ? (avg * 3.6).toFixed(1) + ' km/t' : '–') : paceFmt(avg);
   const km2 = (routeNewCells(t.coords || [], new Set()) * CFG.CELL_KM2).toFixed(2);
+  const typeChips = ['Walk', 'Run', 'Hike', 'Ride'].map(k =>
+    `<button class="chip ${k === t.type ? 'on' : ''}" onclick="changeTrackType('${k}')">${k === 'Ride' ? '🚴' : k === 'Run' ? '🏃' : k === 'Hike' ? '🥾' : '🚶'} ${typeLabel(k)}</button>`).join('');
   document.getElementById('tm-body').innerHTML =
     `<div class="tcard-h" style="margin-bottom:12px">` +
     `<span class="dot" style="background:${typeColor(t.type)}"></span>` +
@@ -2166,9 +2226,21 @@ function openTrackDetail(id) {
     `<div class="card"><div class="lab">Punkter</div><div class="val">${(t.coords||[]).length}</div></div>` +
     `<div class="card"><div class="lab">Utforsket</div><div class="val">${km2}<i>km²</i></div></div>` +
     `</div>` +
+    `<div style="margin:15px 0 7px;text-transform:uppercase;font-size:10px;color:var(--muted);letter-spacing:.5px;font-weight:600">Endre aktivitet</div>` +
+    `<div class="chips">${typeChips}</div>` +
     `<button class="wide" style="margin-top:14px;border-color:var(--green);color:var(--green-dark);font-weight:600" onclick="trackToRoute()">🧭 Lagre som rute å følge</button>` +
     `<button class="wide danger" style="margin-top:8px" onclick="delTrackFromModal()">🗑 Slett denne turen</button>`;
   document.getElementById('trackModal').classList.add('on');
+}
+function changeTrackType(newType) {
+  const tracks = DB.read(K_TRACKS, []);
+  const t = tracks.find(x => x.id === tmId);
+  if (!t) return;
+  t.type = newType;
+  DB.write(K_TRACKS, tracks);
+  openTrackDetail(tmId);
+  renderProfile(); drawMap();
+  toast('Aktivitet oppdatert');
 }
 function trackToRoute() {
   const t = DB.tracks().find(x => x.id === tmId);
@@ -2182,10 +2254,10 @@ function trackToRoute() {
     created: new Date().toISOString(), fromTrack: t.id,
   });
   closeTrackModal();
-  toast('Lagret som rute — velg den under Følg rute');
+  toast('Lagret som ny rute — velg den under Følg rute');
 }
 function closeTrackModal() { document.getElementById('trackModal').classList.remove('on'); }
-function tmShowOnMap() { if (tmId) { closeTrackModal(); highlightTrack(tmId); } }
+function tmShowOnMap() { if (tmId) { closeTrackModal(); showTrackOnMap(tmId); } }
 function delTrackFromModal() {
   if (!tmId || !confirm('Slette denne turen?')) return;
   DB.delTrack(tmId);
@@ -2374,7 +2446,7 @@ function escapeHtml(s) {
   }
 
   initMap();
-  setType('Walk');
+  setType('Ride');
   setFerdMode('fri');
   renderProfChips();
   evalAchievements(false);
