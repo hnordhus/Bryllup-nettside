@@ -196,6 +196,8 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
   border-radius:20px 20px 0 0;padding:14px 16px 18px;box-shadow:var(--sh-up);
   max-height:68%;overflow-y:auto;display:none}
 .plan.on{display:block}
+.plan-grab{height:14px;display:flex;align-items:center;justify-content:center;margin-top:-4px;margin-bottom:6px;cursor:ns-resize}
+.plan-grab i{width:38px;height:4px;border-radius:2px;background:var(--border)}
 .plan-h{display:flex;align-items:center;margin-bottom:12px}
 .plan-h b{font-size:16px;font-weight:700;color:var(--navy);flex:1}
 .hint{font-size:12px;color:var(--muted);text-align:center;margin:9px 0}
@@ -335,6 +337,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
     <div class="body" id="ts-body"></div>
   </div>
   <div id="plan" class="plan">
+    <div class="plan-grab" id="plan-grab"><i></i></div>
     <div class="plan-h"><b>Planlegg rute</b><button class="x" style="font-size:19px" onclick="closePlan()">✕</button></div>
     <div class="searchbar plan-search">
       <input type="search" id="q-plan" placeholder="Søk og legg til punkt…" autocomplete="off" oninput="searchPlan()">
@@ -617,6 +620,11 @@ const DB = {
   routes() { return this.read(K_ROUTES, []); },
   addRoute(r) { const a = this.read(K_ROUTES, []); a.push(r); return this.write(K_ROUTES, a); },
   delRoute(id) { this.write(K_ROUTES, this.read(K_ROUTES, []).filter(r => r.id !== id)); },
+  updateRoute(r) {
+    const a = this.read(K_ROUTES, []);
+    const i = a.findIndex(x => x.id === r.id);
+    if (i >= 0) { a[i] = r; this.write(K_ROUTES, a); }
+  },
   ghosts() { return this.read(K_GHOST, {}); },
   ghost(id) { return this.ghosts()[id] || null; },
   setGhost(id, g) { const a = this.ghosts(); a[id] = g; this.write(K_GHOST, a); },
@@ -832,6 +840,7 @@ let highlightId = null, tmId = null;
 let heatOn = false, heatLayer = null;
 let mapPosMarker = null, ferdPosMarker = null;
 let tsId = null, tsExpanded = false, tsDrag = null;
+let planDrag = null, routeModalMode = 'pick', ghostTrackId = null;
 
 function initMap() {
   if (map) return;
@@ -870,7 +879,7 @@ function drawMap() {
       line.bindPopup(`<b>${escapeHtml(t.name || 'Tur')}</b><br>${typeLabel(t.type)} · ${fmtDist(t.distance)} · ${fmtTime(t.movingTime)}<br><small>${fmtDate(t.date)}</small>`);
     }
     L.polyline(t.coords, { color: '#000', weight: 20, opacity: 0 })
-      .on('click', () => showTrackOnMap(t.id)).addTo(trackLayer);
+      .on('click', () => { if (!planOn) showTrackOnMap(t.id); }).addTo(trackLayer);
     bounds.push(...t.coords);
   }
 
@@ -1490,6 +1499,63 @@ function parseFeature(f) {
   };
 }
 
+function normAng(a) {
+  while (a > 180) a -= 360;
+  while (a < -180) a += 360;
+  return a;
+}
+function bearing(a, b) {
+  const y = (b[1] - a[1]) * Math.cos((a[0] + b[0]) * Math.PI / 360);
+  const x = (b[0] - a[0]);
+  return Math.atan2(y, x) * 180 / Math.PI;
+}
+/* Keep start/end + key turns, and some spacing points, then cap amount for ORS. */
+function trackWaypoints(coords, maxPts) {
+  if (!coords || coords.length < 2) return [];
+  const out = [coords[0]];
+  let since = 0, lastWp = coords[0];
+  for (let i = 1; i < coords.length - 1; i++) {
+    const p0 = coords[i - 1], p1 = coords[i], p2 = coords[i + 1];
+    const seg = haversine(p0[0], p0[1], p1[0], p1[1]);
+    since += seg;
+    const turn = Math.abs(normAng(bearing(p0, p1) - bearing(p1, p2)));
+    const fromLast = haversine(lastWp[0], lastWp[1], p1[0], p1[1]);
+    if ((turn >= 35 && fromLast > 120) || since > 1200) {
+      out.push(p1);
+      lastWp = p1;
+      since = 0;
+    }
+  }
+  out.push(coords[coords.length - 1]);
+  const cap = maxPts || 10;
+  if (out.length <= cap) return out;
+  const thin = [out[0]];
+  const step = (out.length - 1) / (cap - 1);
+  for (let i = 1; i < cap - 1; i++) thin.push(out[Math.round(i * step)]);
+  thin.push(out[out.length - 1]);
+  return thin;
+}
+
+async function enrichRouteForNav(route) {
+  if (!route || !route.coords || route.coords.length < 2) return route;
+  if (route.steps && route.steps.length && route.elevation && route.elevation.length) return route;
+  const wps = (route.waypoints && route.waypoints.length >= 2) ? route.waypoints : trackWaypoints(route.coords, 10);
+  if (!wps || wps.length < 2) return route;
+  try {
+    const list = await orsRoute(route.profile || 'foot-walking', wps, false);
+    const best = list.reduce((a, b) => (a.duration <= b.duration ? a : b));
+    const out = Object.assign({}, route, {
+      coords: best.coords, steps: best.steps, elevation: best.elevation,
+      distance: best.distance, duration: best.duration, ascent: best.ascent, turns: best.turns,
+      waypoints: wps,
+    });
+    if (out.id && !String(out.id).startsWith('home')) DB.updateRoute(out);
+    return out;
+  } catch (e) {
+    return route;
+  }
+}
+
 /** How many ~100m cells a route touches that aren't already explored. */
 function routeNewCells(coords, explored) {
   const seen = new Set();
@@ -1523,12 +1589,40 @@ function openPlan() {
   planOn = true;
   document.getElementById('plan').classList.add('on');
   document.getElementById('b-plan').classList.add('on');
+  hideTrackSheet();
   renderProfChips(); renderSavedRoutes(); updatePlanHint(); renderWpList();
 }
 function closePlan() {
   planOn = false;
   document.getElementById('plan').classList.remove('on');
   document.getElementById('b-plan').classList.remove('on');
+}
+
+function setPlanHeight(h) {
+  const el = document.getElementById('plan');
+  if (!el) return;
+  const max = Math.min(window.innerHeight * 0.86, window.innerHeight - 80);
+  const clamped = Math.max(220, Math.min(max, h));
+  el.style.maxHeight = 'none';
+  el.style.height = clamped + 'px';
+}
+function initPlanDrag() {
+  const grab = document.getElementById('plan-grab');
+  if (!grab || grab._bound) return;
+  grab._bound = true;
+  grab.addEventListener('pointerdown', e => {
+    const el = document.getElementById('plan');
+    if (!el || !planOn) return;
+    planDrag = { y: e.clientY, h: el.getBoundingClientRect().height };
+    grab.setPointerCapture(e.pointerId);
+  });
+  grab.addEventListener('pointermove', e => {
+    if (!planDrag) return;
+    setPlanHeight(planDrag.h + (planDrag.y - e.clientY));
+  });
+  const stop = () => { planDrag = null; };
+  grab.addEventListener('pointerup', stop);
+  grab.addEventListener('pointercancel', stop);
 }
 function renderProfChips() {
   const el = document.getElementById('prof-chips');
@@ -1758,7 +1852,9 @@ function renderRouteSelect() {
     (navRoute ? 'Bytt' : 'Velg') + '</button></div>';
 }
 
-function pickRoutePrompt() {
+function pickRoutePrompt(mode, trackId) {
+  routeModalMode = mode || 'pick';
+  ghostTrackId = trackId || null;
   const rs = DB.routes();
   const el = document.getElementById('rp-list');
   el.innerHTML = rs.length ? rs.map((r, i) => `
@@ -1766,13 +1862,17 @@ function pickRoutePrompt() {
       <div class="ic" style="background:rgba(42,117,199,.1)">🧭</div>
       <div class="body"><b>${escapeHtml(r.name)}</b>
         <small>${(r.distance/1000).toFixed(1)} km · ${r.turns} svinger · ${fmtTimeShort(r.duration)}</small></div>
-      <button class="x" onclick="event.stopPropagation();delRouteFromModal('${r.id}')">✕</button>
+      ${routeModalMode === 'pick' ? `<button class="x" onclick="event.stopPropagation();delRouteFromModal('${r.id}')">✕</button>` : ''}
     </div>`).join('') : '<div class="empty" style="padding:20px">Ingen lagrede ruter</div>';
+  const h = document.querySelector('#routeModal h3');
+  if (h) h.textContent = routeModalMode === 'ghost' ? 'Koble tur til rute (spøkelse)' : 'Velg rute å følge';
   document.getElementById('routeModal').classList.add('on');
 }
 function pickRouteSheet(i) {
   const rs = DB.routes();
-  if (rs[i]) useRoute(rs[i]);
+  if (!rs[i]) { closeRouteModal(); return; }
+  if (routeModalMode === 'ghost' && ghostTrackId) linkTrackToGhost(ghostTrackId, rs[i].id);
+  else useRoute(rs[i]);
   closeRouteModal();
 }
 function closeRouteModal() { document.getElementById('routeModal').classList.remove('on'); }
@@ -1781,18 +1881,18 @@ function delRouteFromModal(id) {
   pickRoutePrompt();
 }
 
-function useRoute(r) {
-  navRoute = r;
-  navCum = cumulative(r.coords);
+async function useRoute(r) {
+  navRoute = await enrichRouteForNav(r);
+  navCum = cumulative(navRoute.coords);
   navIdx = 0;
-  setType((PROFILES[r.profile] || {}).type || 'Walk');
+  setType((PROFILES[navRoute.profile] || {}).type || 'Walk');
   if (tmap) {
     if (navLine) tmap.removeLayer(navLine);
-    navLine = L.polyline(r.coords, { color: '#2A75C7', weight: 5, opacity: .55, dashArray: '9,7' }).addTo(tmap);
-    tmap.fitBounds(L.latLngBounds(r.coords).pad(.15));
+    navLine = L.polyline(navRoute.coords, { color: '#2A75C7', weight: 5, opacity: .55, dashArray: '9,7' }).addTo(tmap);
+    tmap.fitBounds(L.latLngBounds(navRoute.coords).pad(.15));
   }
   renderRouteSelect();
-  toast(r.name + ' · ' + r.turns + ' svinger');
+  toast(navRoute.name + ' · ' + navRoute.turns + ' svinger');
 }
 
 /* Follow a route in reverse (end → start). Turn-by-turn is dropped when reversed. */
@@ -2305,7 +2405,8 @@ function openTrackDetail(id) {
     `</div>` +
     `<div style="margin:15px 0 7px;text-transform:uppercase;font-size:10px;color:var(--muted);letter-spacing:.5px;font-weight:600">Endre aktivitet</div>` +
     `<div class="chips">${typeChips}</div>` +
-    `<button class="wide" style="margin-top:14px;border-color:var(--green);color:var(--green-dark);font-weight:600" onclick="trackToRoute()">🧭 Lagre som rute å følge</button>` +
+    `<button class="wide" style="margin-top:14px;border-color:var(--green);color:var(--green-dark);font-weight:600" onclick="trackToRoute()">🧭 Lagre som ny rute</button>` +
+    `<button class="wide" style="margin-top:8px;border-color:var(--blue);color:var(--blue)" onclick="pickRoutePrompt('ghost','${t.id}')">👻 Koble tur til rute</button>` +
     `<button class="wide danger" style="margin-top:8px" onclick="delTrackFromModal()">🗑 Slett denne turen</button>`;
   document.getElementById('trackModal').classList.add('on');
 }
@@ -2319,20 +2420,76 @@ function changeTrackType(newType) {
   renderProfile(); drawMap();
   toast('Aktivitet oppdatert');
 }
-function trackToRoute() {
+
+function nearestIndexOnCoords(lat, lng, coords, seed) {
+  const s = typeof seed === 'number' ? seed : 0;
+  let lo = Math.max(0, s - 80), hi = Math.min(coords.length, s + 280);
+  let best = s, bd = Infinity;
+  for (let i = lo; i < hi; i++) {
+    const d = haversine(lat, lng, coords[i][0], coords[i][1]);
+    if (d < bd) { bd = d; best = i; }
+  }
+  if (bd > 120) {
+    for (let i = 0; i < coords.length; i++) {
+      const d = haversine(lat, lng, coords[i][0], coords[i][1]);
+      if (d < bd) { bd = d; best = i; }
+    }
+  }
+  return best;
+}
+function linkTrackToGhost(trackId, routeId) {
+  const t = DB.tracks().find(x => x.id === trackId);
+  const r = DB.routes().find(x => x.id === routeId);
+  if (!t || !r || !r.coords || r.coords.length < 2) return;
+  const cum = cumulative(r.coords);
+  const total = cum[cum.length - 1] || 0;
+  const secs = t.movingTime || t.elapsedTime || 0;
+  if (!secs || !t.coords || t.coords.length < 2 || !total) return toast('Mangler data for sammenligning');
+
+  const samples = [];
+  let idx = 0, bestDone = 0;
+  for (let i = 0; i < t.coords.length; i++) {
+    idx = nearestIndexOnCoords(t.coords[i][0], t.coords[i][1], r.coords, idx);
+    let done = cum[idx] || 0;
+    if (done < bestDone) done = bestDone;
+    else bestDone = done;
+    samples.push([secs * (i / Math.max(1, t.coords.length - 1)), done]);
+  }
+  if (bestDone < total * 0.9) return toast('Turen følger ikke nok av ruten (minst 90%)');
+
+  const key = ghostKey(r);
+  const prev = DB.ghost(key);
+  if (!prev || secs < prev.time) {
+    DB.setGhost(key, { time: secs, samples, fromTrack: trackId });
+    toast('Turen er koblet som ny bestetid på ruten 👻');
+  } else toast('Koblet til ruten, men ikke raskere enn gjeldende bestetid');
+}
+async function trackToRoute() {
   const t = DB.tracks().find(x => x.id === tmId);
   if (!t || !t.coords || t.coords.length < 2) return;
   const suggested = (t.name || 'Tur') + ' (rute)';
   const name = (prompt('Navn på ny rute:', suggested) || '').trim();
   if (!name) return toast('Ruten må ha et navn');
-  DB.addRoute({
-    id: 'r' + Date.now(), name,
-    profile: t.type === 'Ride' ? 'cycling-regular' : t.type === 'Hike' ? 'foot-hiking' : 'foot-walking',
-    waypoints: [t.coords[0], t.coords[t.coords.length - 1]],
+  const profile = t.type === 'Ride' ? 'cycling-regular' : t.type === 'Hike' ? 'foot-hiking' : 'foot-walking';
+  const waypoints = trackWaypoints(t.coords, 10);
+  let routeObj = {
+    id: 'r' + Date.now(), name, profile,
+    waypoints,
     coords: t.coords, steps: [], elevation: null,
     distance: t.distance, duration: t.movingTime || 0, ascent: 0, turns: 0,
     created: new Date().toISOString(), fromTrack: t.id,
-  });
+  };
+  try {
+    const list = await orsRoute(profile, waypoints, false);
+    const best = list.reduce((a, b) => (a.duration <= b.duration ? a : b));
+    routeObj = Object.assign(routeObj, {
+      coords: best.coords, steps: best.steps, elevation: best.elevation,
+      distance: best.distance, duration: best.duration, ascent: best.ascent, turns: best.turns,
+    });
+  } catch (e) {
+    toast('Lagrer rå rute (ORS kunne ikke beregne optimal variant)', 4200);
+  }
+  DB.addRoute(routeObj);
   closeTrackModal();
   toast('Lagret som ny rute — velg den under Følg rute');
 }
@@ -2527,6 +2684,7 @@ function escapeHtml(s) {
 
   initMap();
   initTrackSheetDrag();
+  initPlanDrag();
   setType('Ride');
   setFerdMode('fri');
   renderProfChips();
