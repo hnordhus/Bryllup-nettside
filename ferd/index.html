@@ -196,7 +196,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
   border-radius:20px 20px 0 0;padding:14px 16px 18px;box-shadow:var(--sh-up);
   max-height:68%;overflow-y:auto;display:none}
 .plan.on{display:block}
-.plan-grab{height:14px;display:flex;align-items:center;justify-content:center;margin-top:-4px;margin-bottom:6px;cursor:ns-resize}
+.plan-grab{height:22px;display:flex;align-items:center;justify-content:center;margin-top:-6px;margin-bottom:6px;cursor:ns-resize;touch-action:none;user-select:none}
 .plan-grab i{width:38px;height:4px;border-radius:2px;background:var(--border)}
 .plan-h{display:flex;align-items:center;margin-bottom:12px}
 .plan-h b{font-size:16px;font-weight:700;color:var(--navy);flex:1}
@@ -241,6 +241,8 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 .offroute{color:#fca5a5!important}
 .viewtog{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);right:10px;z-index:660;display:none}
 .viewtog.on{display:block}
+.navcard .viewtog{position:static;display:none;margin-top:10px;text-align:right}
+.navcard .viewtog.on{display:block}
 
 /* ORS key field */
 .keyrow{display:flex;gap:7px;margin-top:8px}
@@ -306,7 +308,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 .rp-item .x{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;padding:3px 5px;flex-shrink:0}
 
 /* ---- elevation profile + ghost ---- */
-.elevcanvas{width:100%;height:64px;background:#0f1826;border-radius:12px;margin-bottom:11px;display:block}
+.elevcanvas{width:100%;height:64px;background:#0f1826;border-radius:12px;margin-bottom:11px;display:block;cursor:pointer;touch-action:manipulation}
 .nav-ghost{font-family:var(--mono);font-size:12px;font-weight:600;text-align:center;margin-top:7px}
 .ghost-pin{font-size:20px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
 </style>
@@ -379,9 +381,8 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
     <div class="nav-meta"><span id="nav-rem">–</span><span id="nav-eta">–</span></div>
     <div id="nav-ghost" class="nav-ghost"></div>
     <div class="nav-bar"><i id="nav-bar" style="width:0%"></i></div>
+    <div id="viewtog" class="viewtog"><button class="mbtn" onclick="toggleNavView()">🧭 POV</button></div>
   </div>
-  <div id="viewtog" class="viewtog"><button class="mbtn" onclick="toggleNavView()">🧭 POV</button></div>
-
   <div class="panel">
     <div class="modes" id="ferd-modes">
       <button id="m-fri" class="on" onclick="setFerdMode('fri')">Fri ferd</button>
@@ -402,7 +403,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
       <div class="lv"><b id="l-time">0:00</b><span>tid</span></div>
       <div class="lv"><b id="l-speed">–</b><span id="l-speed-u">tempo</span></div>
     </div>
-    <canvas id="elevcanvas" class="elevcanvas" style="display:none"></canvas>
+    <canvas id="elevcanvas" class="elevcanvas" style="display:none" onclick="toggleElevationZoom()"></canvas>
     <div id="stop-row" class="ctrl-row" style="display:none">
       <button class="rbtn place" onclick="openPlaceModal()" title="Lagre sted">📍</button>
       <button id="pause-btn" class="rbtn pause" onclick="togglePause()" title="Pause">❚❚</button>
@@ -1132,7 +1133,7 @@ let active = false, paused = false, type = 'Ride';
 let watchId = null, tickId = null, wakeLock = null;
 let coords = [], dist = 0, tStart = 0, movingMs = 0, lastFixTime = 0, lastMoveTime = 0, curSpeed = 0;
 let sessionVisits = new Set();
-let pendingSession = null, elevOn = false, ghostOn = false, curGhost = null, ghostMarker = null, runSamples = [], navDone = 0;
+let pendingSession = null, elevOn = false, elevZoomed = false, ghostOn = false, curGhost = null, ghostMarker = null, ghostTrail = null, runSamples = [], navDone = 0;
 
 function initTMap() {
   if (tmap) return;
@@ -1212,8 +1213,8 @@ function startTrack() {
   document.getElementById('rsel-wrap').style.display = 'none';
   document.getElementById('btn-home').style.display = 'none';
   runSamples = [];
-  if (ghostMarker) { tmap.removeLayer(ghostMarker); ghostMarker = null; }
-  curGhost = navRoute ? DB.ghost(ghostKey(navRoute)) : null;
+  clearGhostVisuals();
+  curGhost = navRoute ? normalizeGhost(DB.ghost(ghostKey(navRoute)), navRoute) : null;
   if (navRoute) {
     navIdx = 0;
     document.getElementById('navcard').classList.add('on');
@@ -1356,6 +1357,7 @@ function stopTrack() {
   elevOn = false; document.getElementById('b-elev').classList.remove('on');
   ghostOn = false; document.getElementById('b-ghost').classList.remove('on');
   if (ghostMarker) { tmap.removeLayer(ghostMarker); ghostMarker = null; }
+  clearGhostVisuals();
   gps('', '');
 
   if (coords.length >= 2 && dist > 20) {
@@ -1489,6 +1491,7 @@ function parseFeature(f) {
         name: (st.name && st.name !== '-') ? st.name : '',
         distance: st.distance || 0,
         wp: st.way_points || [0, 0],
+        exit: st.exit_number || st.exitNumber || 0,
       });
   return {
     coords, steps, elevation,
@@ -1566,7 +1569,19 @@ function routeNewCells(coords, explored) {
   return seen.size;
 }
 
-/** Tag alternatives: fastest / fewest turns / shortest / explores more. */
+function preferredRouteIndex(list) {
+  if (!list.length) return 0;
+  const isBike = String(profile).startsWith('cycling-');
+  if (!isBike) {
+    return list.reduce((best, route, i) => route.duration < list[best].duration ? i : best, 0);
+  }
+  const fastest = Math.min(...list.map(r => r.duration));
+  const candidates = list.map((r, i) => ({ r, i })).filter(x => x.r.duration <= fastest * 1.25);
+  candidates.sort((a, b) => a.r.turns - b.r.turns || a.r.distance - b.r.distance || a.r.duration - b.r.duration);
+  return candidates.length ? candidates[0].i : 0;
+}
+
+/** Tag alternatives: fastest / recommended cycling route / fewest turns / shortest / explores more. */
 function labelAlts(list) {
   if (!list.length) return;
   const minDur = Math.min(...list.map(r => r.duration));
@@ -1575,8 +1590,10 @@ function labelAlts(list) {
   const explored = exploredCells();
   list.forEach(r => { r.newCells = routeNewCells(r.coords, explored); });
   const maxNew = Math.max(...list.map(r => r.newCells));
+  const preferred = preferredRouteIndex(list);
   list.forEach(r => {
     r.tags = [];
+    if (list.indexOf(r) === preferred && String(profile).startsWith('cycling-')) r.tags.push(['Anbefalt sykkel', 'g']);
     if (r.duration === minDur) r.tags.push(['Raskest', '']);
     if (r.turns === minTurn && list.length > 1) r.tags.push(['Færrest svinger', 'g']);
     if (r.distance === minDist && r.duration !== minDur) r.tags.push(['Kortest', 'n']);
@@ -1623,6 +1640,17 @@ function initPlanDrag() {
   const stop = () => { planDrag = null; };
   grab.addEventListener('pointerup', stop);
   grab.addEventListener('pointercancel', stop);
+  grab.addEventListener('touchstart', e => {
+    const el = document.getElementById('plan');
+    if (!el || !planOn || !e.touches.length) return;
+    planDrag = { y: e.touches[0].clientY, h: el.getBoundingClientRect().height };
+  }, { passive: false });
+  grab.addEventListener('touchmove', e => {
+    if (!planDrag || !e.touches.length) return;
+    e.preventDefault();
+    setPlanHeight(planDrag.h + (planDrag.y - e.touches[0].clientY));
+  }, { passive: false });
+  grab.addEventListener('touchend', () => { planDrag = null; }, { passive: false });
 }
 function renderProfChips() {
   const el = document.getElementById('prof-chips');
@@ -1715,7 +1743,7 @@ async function calcRoute() {
   try {
     alts = await orsRoute(profile, wps, true);
     labelAlts(alts);
-    altPick = 0;
+    altPick = preferredRouteIndex(alts);
     renderAlts(); drawAlts();
     document.getElementById('save-route').style.display = 'block';
   } catch (e) {
@@ -1883,6 +1911,7 @@ function delRouteFromModal(id) {
 
 async function useRoute(r) {
   navRoute = await enrichRouteForNav(r);
+  elevZoomed = false;
   navCum = cumulative(navRoute.coords);
   navIdx = 0;
   setType((PROFILES[navRoute.profile] || {}).type || 'Walk');
@@ -1898,6 +1927,7 @@ async function useRoute(r) {
 /* Follow a route in reverse (end → start). Turn-by-turn is dropped when reversed. */
 function flipRoute() {
   if (!navRoute) return;
+  elevZoomed = false;
   navRoute = Object.assign({}, navRoute, {
     coords: navRoute.coords.slice().reverse(),
     elevation: navRoute.elevation ? navRoute.elevation.slice().reverse() : null,
@@ -2016,9 +2046,13 @@ function updateNav(lat, lng) {
   } else if (step) {
     const toTurn = Math.max(0, (navCum[Math.min(stepAt, navCum.length - 1)] || 0) - done);
     const info = TURN[step.type] || ['Fortsett', '↑'];
+    const isIntermediate = step.type === 10 && stepAt < navRoute.coords.length - 2;
+    const roundabout = (step.type === 7 || step.type === 8) && step.exit
+      ? `Rundkjøring · ta ${step.exit}. avkjørsel`
+      : null;
     ar.textContent = info[1];
     dEl.textContent = toTurn >= 1000 ? (toTurn / 1000).toFixed(1) + ' km' : Math.round(toTurn) + ' m';
-    tEl.textContent = info[0] + (step.name ? ' · ' + step.name : '');
+    tEl.textContent = roundabout || (isIntermediate ? 'Mellompunkt' : info[0]) + (step.name ? ' · ' + step.name : '');
     tEl.classList.remove('offroute');
   } else {
     ar.textContent = '▲';
@@ -2042,6 +2076,19 @@ function updateNav(lat, lng) {
 }
 
 function ghostKey(r) { return r.id + (r._rev ? ':r' : ''); }
+function normalizeGhost(g, route) {
+  if (!g || !g.samples || !g.samples.length || !route) return g || null;
+  const total = route.distance || 0;
+  const first = g.samples[0][1] || 0;
+  const last = g.samples[g.samples.length - 1][1] || 0;
+  // Old ghost data could start near the finish. Do not show that as a valid ghost.
+  if (total > 0 && first > total * 0.5) return null;
+  if (first <= 0.1) return g;
+  return Object.assign({}, g, {
+    samples: g.samples.map(s => [s[0], Math.max(0, s[1] - first)]),
+    covered: Math.max(0, last - first),
+  });
+}
 
 /* ---- elevation profile ---- */
 function toggleElev() {
@@ -2049,6 +2096,11 @@ function toggleElev() {
   document.getElementById('b-elev').classList.toggle('on', elevOn);
   document.getElementById('elevcanvas').style.display = elevOn ? 'block' : 'none';
   if (elevOn) setTimeout(drawElevation, 40);
+}
+function toggleElevationZoom() {
+  if (!navRoute || !navRoute.elevation) return;
+  elevZoomed = !elevZoomed;
+  drawElevation();
 }
 function drawElevation() {
   const cv = document.getElementById('elevcanvas');
@@ -2065,25 +2117,54 @@ function drawElevation() {
     ctx.fillText('Ingen høydedata for denne ruten', w / 2, h / 2);
     return;
   }
-  const min = Math.min(...ele), max = Math.max(...ele), rng = Math.max(1, max - min), n = ele.length;
-  const X = i => i / (n - 1) * w;
+  const cum = navCum, total = cum[cum.length - 1] || navRoute.distance || 0;
+  const current = cum[Math.min(Math.max(0, navIdx), cum.length - 1)] || 0;
+  const windowStart = elevZoomed ? Math.max(0, current - 3333) : 0;
+  const windowEnd = elevZoomed ? Math.min(total, current + 6667) : total;
+  const visible = [];
+  for (let i = 0; i < ele.length; i++) {
+    const d = cum.length === ele.length ? cum[i] : total * i / Math.max(1, ele.length - 1);
+    if (d >= windowStart && d <= windowEnd) visible.push({ i, d, e: ele[i] });
+  }
+  if (visible.length < 2) return;
+  const min = Math.min(...visible.map(x => x.e)), max = Math.max(...visible.map(x => x.e));
+  const rng = Math.max(1, max - min), span = Math.max(1, windowEnd - windowStart);
+  const Xd = d => (d - windowStart) / span * w;
   const Y = e => h - 6 - (e - min) / rng * (h - 14);
   ctx.beginPath(); ctx.moveTo(0, h);
-  for (let i = 0; i < n; i++) ctx.lineTo(X(i), Y(ele[i]));
+  for (const p of visible) ctx.lineTo(Xd(p.d), Y(p.e));
   ctx.lineTo(w, h); ctx.closePath();
   const g = ctx.createLinearGradient(0, 0, 0, h);
   g.addColorStop(0, 'rgba(77,182,247,.5)'); g.addColorStop(1, 'rgba(77,182,247,.04)');
   ctx.fillStyle = g; ctx.fill();
   ctx.beginPath();
-  for (let i = 0; i < n; i++) { const px = X(i), py = Y(ele[i]); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+  visible.forEach((p, i) => { const px = Xd(p.d), py = Y(p.e); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
   ctx.strokeStyle = '#4DB6F7'; ctx.lineWidth = 1.5; ctx.stroke();
-  const idx = Math.min(Math.max(0, navIdx), n - 1), mx = X(idx);
+  const currentEleIdx = Math.min(ele.length - 1, Math.max(0, Math.round((current / Math.max(1, total)) * (ele.length - 1))));
+  const currentEle = ele[currentEleIdx];
+  const mx = Xd(current);
   ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(mx, 0); ctx.lineTo(mx, h); ctx.stroke();
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mx, Y(ele[idx]), 4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mx, Y(currentEle), 4, 0, Math.PI * 2); ctx.fill();
+
+  // Ghost progress uses the same route distance scale as the current rider.
+  if (ghostOn && curGhost) {
+    const ghostDistance = ghostDistAt(curGhost, movingMs / 1000);
+    const ghostVisible = visible.filter(p => p.d <= ghostDistance);
+    if (ghostVisible.length > 1) {
+      ctx.beginPath();
+      ghostVisible.forEach((p, i) => { const px = Xd(p.d), py = Y(p.e); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+      ctx.strokeStyle = '#a8b0bb'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]);
+      const gx = Xd(Math.max(windowStart, Math.min(windowEnd, ghostDistance)));
+      const last = ghostVisible[ghostVisible.length - 1];
+      ctx.fillStyle = '#d1d5db'; ctx.beginPath(); ctx.arc(gx, Y(last.e), 3, 0, Math.PI * 2); ctx.fill();
+    }
+  }
   ctx.fillStyle = '#94a3b8'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
   ctx.fillText(Math.round(max) + ' m', 4, 11);
   ctx.fillText(Math.round(min) + ' m', 4, h - 4);
+  ctx.textAlign = 'right';
+  ctx.fillText(elevZoomed ? '10 km vindu · trykk for hele ruten' : 'Trykk for 10 km vindu', w - 4, h - 4);
 }
 
 /* ---- ghost: race your own best time on a route ---- */
@@ -2092,8 +2173,12 @@ function toggleGhost() {
   ghostOn = !ghostOn;
   document.getElementById('b-ghost').classList.toggle('on', ghostOn);
   if (ghostOn && !curGhost) toast('Ingen bestetid lagret ennå — fullfør ruten én gang først');
-  if (!ghostOn && ghostMarker) { tmap.removeLayer(ghostMarker); ghostMarker = null; }
+  if (!ghostOn) clearGhostVisuals();
   const el = document.getElementById('nav-ghost'); if (el && !ghostOn) el.textContent = '';
+}
+function clearGhostVisuals() {
+  if (ghostMarker && tmap) { tmap.removeLayer(ghostMarker); ghostMarker = null; }
+  if (ghostTrail && tmap) { tmap.removeLayer(ghostTrail); ghostTrail = null; }
 }
 function updateGhost(done) {
   const gd = ghostDistAt(curGhost, movingMs / 1000);
@@ -2101,6 +2186,11 @@ function updateGhost(done) {
   if (gp) {
     if (ghostMarker) ghostMarker.setLatLng(gp);
     else ghostMarker = L.marker(gp, { icon: L.divIcon({ className: '', html: '<div class="ghost-pin">👻</div>', iconSize: [28, 28], iconAnchor: [14, 14] }) }).addTo(tmap);
+  }
+  const trail = routeCoordsUntil(navRoute.coords, navCum, gd);
+  if (trail.length > 1) {
+    if (ghostTrail) ghostTrail.setLatLngs(trail);
+    else ghostTrail = L.polyline(trail, { color: '#94a3b8', weight: 3, opacity: .72, dashArray: '5,6', interactive: false }).addTo(tmap);
   }
   const delta = done - gd;
   const el = document.getElementById('nav-ghost');
@@ -2121,6 +2211,17 @@ function ghostDistAt(g, t) {
     }
   }
   return s[s.length - 1][1];
+}
+function routeCoordsUntil(coords, cum, d) {
+  if (!coords.length) return [];
+  const out = [];
+  for (let i = 0; i < coords.length; i++) {
+    if ((cum[i] || 0) <= d) out.push(coords[i]);
+    else break;
+  }
+  const end = coordAtDist(coords, cum, d);
+  if (end && (!out.length || end[0] !== out[out.length - 1][0] || end[1] !== out[out.length - 1][1])) out.push(end);
+  return out;
 }
 function coordAtDist(coords, cum, d) {
   if (!coords.length) return null;
@@ -2437,30 +2538,37 @@ function nearestIndexOnCoords(lat, lng, coords, seed) {
   }
   return best;
 }
-function linkTrackToGhost(trackId, routeId) {
+async function linkTrackToGhost(trackId, routeId) {
   const t = DB.tracks().find(x => x.id === trackId);
-  const r = DB.routes().find(x => x.id === routeId);
+  let r = DB.routes().find(x => x.id === routeId);
   if (!t || !r || !r.coords || r.coords.length < 2) return;
+  r = await enrichRouteForNav(r);
   const cum = cumulative(r.coords);
   const total = cum[cum.length - 1] || 0;
   const secs = t.movingTime || t.elapsedTime || 0;
   if (!secs || !t.coords || t.coords.length < 2 || !total) return toast('Mangler data for sammenligning');
 
   const samples = [];
-  let idx = 0, bestDone = 0;
+  const firstIdx = nearestIndexOnCoords(t.coords[0][0], t.coords[0][1], r.coords, 0);
+  let idx = firstIdx;
+  const firstDone = cum[firstIdx] || 0;
+  let bestDone = firstDone;
   for (let i = 0; i < t.coords.length; i++) {
     idx = nearestIndexOnCoords(t.coords[i][0], t.coords[i][1], r.coords, idx);
     let done = cum[idx] || 0;
     if (done < bestDone) done = bestDone;
     else bestDone = done;
-    samples.push([secs * (i / Math.max(1, t.coords.length - 1)), done]);
+    samples.push([secs * (i / Math.max(1, t.coords.length - 1)), Math.max(0, done - firstDone)]);
   }
-  if (bestDone < total * 0.9) return toast('Turen følger ikke nok av ruten (minst 90%)');
+  const covered = bestDone - firstDone;
+  if (idx <= firstIdx)
+    return toast('Turen ser ut til å gå motsatt vei — flipp ruten først');
+  if (covered < total * 0.9) return toast('Turen følger ikke nok av ruten (minst 90%)');
 
   const key = ghostKey(r);
   const prev = DB.ghost(key);
   if (!prev || secs < prev.time) {
-    DB.setGhost(key, { time: secs, samples, fromTrack: trackId });
+    DB.setGhost(key, { time: secs, samples, fromTrack: trackId, covered });
     toast('Turen er koblet som ny bestetid på ruten 👻');
   } else toast('Koblet til ruten, men ikke raskere enn gjeldende bestetid');
 }
