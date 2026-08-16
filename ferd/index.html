@@ -1173,13 +1173,24 @@ function setType(t) {
 
 /* Keep the screen awake so the browser doesn't suspend GPS */
 async function lockScreen() {
-  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); }
-  catch (e) { /* not supported — fine */ }
+  try {
+    if (!('wakeLock' in navigator)) return;
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch (e) { wakeLock = null; }
 }
 function unlockScreen() { try { wakeLock && wakeLock.release(); } catch (e) {} wakeLock = null; }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && active && !wakeLock) lockScreen();
 });
+
+/* Neutralize iOS shake-to-undo: no focused/undoable text field while tracking */
+function setInputsInert(on) {
+  document.querySelectorAll('input, textarea').forEach(el => {
+    if (on) { el.setAttribute('readonly', 'readonly'); }
+    else { el.removeAttribute('readonly'); }
+  });
+}
 
 function reflectPause() {
   const b = document.getElementById('pause-btn');
@@ -1199,6 +1210,7 @@ function startTrack() {
   if (!navigator.geolocation) return toast('Stedstjenester støttes ikke i denne nettleseren');
   // iOS: drop focus so a device shake can't trigger the "Undo typing/paste" popup
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  setInputsInert(true);
 
   coords = []; dist = 0; movingMs = 0; curSpeed = 0;
   tStart = Date.now(); lastFixTime = 0; lastMoveTime = Date.now();
@@ -1306,6 +1318,8 @@ function checkNearbyPlaces(lat, lng) {
 
 function tick() {
   const now = Date.now();
+  // Re-acquire the wake lock if the OS dropped it, so the screen stays on
+  if (active && !wakeLock) lockScreen();
   // auto-pause when standing still
   if (active && !paused && now - lastMoveTime > CFG.PAUSE_AFTER * 1000 && curSpeed < CFG.PAUSE_SPEED) {
     paused = true;
@@ -1337,6 +1351,7 @@ function stopTrack() {
   if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
   if (tickId !== null) { clearInterval(tickId); tickId = null; }
   unlockScreen();
+  setInputsInert(false);
 
   const elapsed = Math.round((Date.now() - tStart) / 1000);
   const moving = Math.round(movingMs / 1000);
