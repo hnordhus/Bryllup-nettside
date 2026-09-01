@@ -1,0 +1,242 @@
+{
+  "tables": [
+    {
+      "id": "t1",
+      "name": "Cape St. Francis",
+      "capacity": 8,
+      "x": 657,
+      "y": 652,
+      "guests": [
+        "Ingunn",
+        "Daniel",
+        "Mathilde",
+        "Jacob",
+        "Sofie",
+        "Mathias",
+        "Liv",
+        "Henrik"
+      ],
+      "locked": false
+    },
+    {
+      "id": "t2",
+      "name": "Santa Barbara",
+      "capacity": 8,
+      "x": 236,
+      "y": 629,
+      "guests": [
+        "Hedvig Andrea",
+        "Simen Arnekleiv",
+        "Anne",
+        "Thea",
+        "Henrik Lund",
+        "Axel",
+        "Oda",
+        "Sondre"
+      ],
+      "locked": false
+    },
+    {
+      "id": "t3",
+      "name": "Alfama",
+      "capacity": 8,
+      "x": 758,
+      "y": 819,
+      "guests": [
+        "Leif",
+        "Gry",
+        "Terje",
+        "Maria",
+        "Per (Liv Osa)",
+        "Liv Osa",
+        "Atle",
+        "Mamma Nora"
+      ],
+      "locked": false
+    },
+    {
+      "id": "t4",
+      "name": "Forester Road",
+      "capacity": 8,
+      "x": 471,
+      "y": 624,
+      "guests": [
+        "Kristin (søster)",
+        "Tim",
+        "Ragnhild",
+        "Philip",
+        "Gina",
+        "Simen (Gina)",
+        "Cathrine",
+        "Henrik Nordahl"
+      ],
+      "locked": false
+    },
+    {
+      "id": "t5",
+      "name": "Nordnes",
+      "capacity": 8,
+      "x": 498,
+      "y": 806,
+      "guests": [
+        "Julie",
+        "Eliot",
+        "Anna Kleppe",
+        "Sander",
+        "Ellen",
+        "Gunnar",
+        "Frida",
+        "Tønnes"
+      ],
+      "locked": false
+    },
+    {
+      "id": "t6",
+      "name": "Gløshaugen",
+      "capacity": 8,
+      "x": 880,
+      "y": 657,
+      "guests": [
+        "Sigge",
+        "CT",
+        "Nora Lundgreen",
+        "Oscar",
+        "Tuva",
+        "Gustav",
+        "Sine",
+        "Alex"
+      ],
+      "locked": false
+    },
+    {
+      "id": "t7",
+      "name": "Bjølsenborgen",
+      "capacity": 8,
+      "x": 372,
+      "y": 479,
+      "guests": [
+        "Hanna Skjaker",
+        "Andreas Torp",
+        "Martine",
+        "Stig Pedersen",
+        "Emilia",
+        "Simen Sletten",
+        "Kaja",
+        "Andreas Borgen"
+      ],
+      "locked": false
+    },
+    {
+      "id": "t8",
+      "name": "Vestre Borteid",
+      "capacity": 8,
+      "x": 312,
+      "y": 801,
+      "guests": [
+        "Bård",
+        "Sara",
+        "Henrik Drangsland",
+        "Annika",
+        "Herman",
+        "Victoria",
+        "Stian",
+        "Hanna Sletta"
+      ],
+      "locked": false
+    },
+    {
+      "id": "t9",
+      "name": "Mesnali",
+      "capacity": 9,
+      "x": 1076,
+      "y": 667,
+      "guests": [
+        "Øyvind",
+        "Marius (Synne)",
+        "Synne",
+        "Marius Arder",
+        "Fride",
+        "Tobias",
+        "Jørgen",
+        "Håkon",
+        "Emma"
+      ],
+      "locked": false
+    },
+    {
+      "id": "t10",
+      "name": "Briskeby",
+      "capacity": 8,
+      "x": 121,
+      "y": 788,
+      "guests": [
+        "Tore",
+        "Kathrine",
+        "Per Erik",
+        "Christina",
+        "Sigbjørn",
+        "Kaia",
+        "Stig (Benedicte)",
+        "Benedicte"
+      ],
+      "locked": false
+    },
+    {
+      "id": "t11",
+      "name": "Munkerud",
+      "capacity": 8,
+      "x": 967,
+      "y": 812,
+      "guests": [
+        "Moffa",
+        "Zeti",
+        "Audun",
+        null,
+        "Ingeborg",
+        "Trond",
+        "Merete",
+        "Tove"
+      ],
+      "locked": false
+    },
+    {
+      "id": "t12",
+      "name": "Tyrihaugen",
+      "capacity": 8,
+      "x": 1174,
+      "y": 809,
+      "guests": [
+        "Tante Kristin",
+        "Onkel Ove",
+        "Åse",
+        "Asbjørn",
+        "Kikki",
+        "Olav",
+        "Mari",
+        "John André"
+      ],
+      "locked": false
+    },
+    {
+      "id": "t13",
+      "name": "Jaren",
+      "capacity": 8,
+      "x": 121,
+      "y": 485,
+      "guests": [
+        "Malin",
+        "Thomas (Jorunn)",
+        "Tine",
+        "Lars Espen",
+        "Jorunn",
+        "Petter",
+        "Thomas Nordhus",
+        "Kjell Olav"
+      ],
+      "locked": false
+    }
+  ],
+  "waiting": [
+    "Kåre (Merete)"
+  ]
+}

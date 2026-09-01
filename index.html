@@ -539,7 +539,7 @@
             <a href="#" data-page="home" class="active">Hjem</a>
             <a href="#gjesteliste" data-page="gjesteliste">Gjesteliste</a>
             <a href="#gaveliste" data-page="gaveliste">Ønskeliste</a>
-            <!-- <a href="#bordplassering" data-page="bordplassering">Bordplassering</a> -->
+            <a href="bordplassering.html" id="bordplassering-link" style="display: none;">Bordplassering</a>
             <a href="#bildegalleri" data-page="bildegalleri">Bildegalleri</a>
         </nav>
     </div>
@@ -763,15 +763,6 @@
         </div>
     </div>
 
-    <div id="bordplassering-page" class="hidden">
-        <div class="container page-content">
-            <h2>Bordplassering</h2>
-            <div class="info-text">
-                <p style="text-align: center;">Bordplassering vil bli publisert nærmere bryllupsdagen.</p>
-            </div>
-        </div>
-    </div>
-
     <div id="bildegalleri-page" class="hidden">
         <div class="container page-content">
             <h2>Bildegalleri</h2>
@@ -877,6 +868,10 @@
         // Vis brukerrolle på siden
         function updateRoleDisplay() {
             const roleDisplay = document.getElementById('user-role-display');
+            const bordplasseringLink = document.getElementById('bordplassering-link');
+            if (bordplasseringLink) {
+                bordplasseringLink.style.display = sessionStorage.getItem('authenticated') === 'admin' ? '' : 'none';
+            }
             if (roleDisplay) {
                 const role = sessionStorage.getItem('authenticated');
                 if (role === 'admin') {
@@ -893,13 +888,14 @@
         updateRoleDisplay();
         // ===== SLUTT PÅ LOGG UT =====
         // Navigation
-        const pages = ['home', 'gaveliste', 'gjesteliste', 'bordplassering', 'bildegalleri'];
+        const pages = ['home', 'gaveliste', 'gjesteliste', 'bildegalleri'];
         const navLinks = document.querySelectorAll('.nav a');
 
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
-                e.preventDefault();
                 const page = link.dataset.page;
+                if (!page) return;
+                e.preventDefault();
                 
                 // Update URL
                 if (page === 'home') {
