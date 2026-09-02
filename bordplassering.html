@@ -141,34 +141,6 @@
             box-shadow: 0 0 0 4px rgba(160,88,88,0.18);
         }
 
-        .table.locked .table-circle {
-            border-color: #2e7d32;
-            border-width: 2.5px;
-            background: #eaf3ea;
-        }
-
-        .table.locked .table-handle {
-            background: #2e7d32;
-        }
-
-        .lock-badge {
-            position: absolute;
-            top: 42px;
-            right: 42px;
-            font-size: 0.85rem;
-            background: #ffffff;
-            border: 1.5px solid #2e7d32;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-            z-index: 4;
-        }
-
         .table.over .table-circle {
             border-color: var(--accent);
             box-shadow: 0 0 0 5px rgba(201,124,124,0.28);
@@ -364,10 +336,9 @@
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            pointer-events: none;
         }
         .grid-table.selected { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(160,88,88,0.18); }
-        .grid-table.locked { border: 2px solid #2e7d32; }
-        .grid-table.locked .grid-th { background: #2e7d32; }
         .grid-table.over { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,124,124,0.25); }
         .grid-th {
             background: var(--secondary);
@@ -419,11 +390,14 @@
     <div class="header">
         <h1>Bordplassering</h1>
         <p>Ingunn &amp; Henrik · 12. september 2026 · Nordre Skøyen Hovedgård</p>
-        <p style="margin-top: 0.5rem;"><a href="index.html" style="color: var(--secondary); text-decoration: underline; font-size: 0.9rem;">← Tilbake til Hovedsiden</a></p>
     </div>
 
     <div class="toolbar">
         <div class="stats" id="stats"></div>
+        <div class="viewtoggle">
+            <button class="btn" id="btn-plan" onclick="setView('plan')">Plan</button>
+            <button class="btn ghost" id="btn-grid" onclick="setView('grid')">Tabell</button>
+        </div>
         <div class="zoom" id="zoom-controls">
             <button class="btn ghost" onclick="zoomOut()" title="Zoom ut">−</button>
             <span id="zoom-label">100%</span>
@@ -462,6 +436,9 @@
             </div>
         </div>
 
+        <div class="grid-wrap" id="grid-wrap" style="display:none;">
+            <div class="grid-tables" id="grid-tables"></div>
+        </div>
     </div>
 
     <script>
@@ -529,7 +506,6 @@
             if (!Array.isArray(s.tables)) s.tables = [];
             s.tables.forEach(t => {
                 t.capacity = t.capacity || 8;
-                t.locked = !!t.locked;
                 const src = Array.isArray(t.guests) ? t.guests.slice() : [];
                 const len = Math.max(t.capacity, src.length);
                 const out = new Array(len).fill(null);
@@ -541,14 +517,6 @@
             });
             if (!Array.isArray(s.waiting)) s.waiting = [];
             s.waiting = s.waiting.filter(x => x != null && ('' + x).trim() !== '').map(x => ('' + x).trim());
-        }
-
-        function toggleLock(id) {
-            const t = state.tables.find(x => x.id === id);
-            if (!t) return;
-            t.locked = !t.locked;
-            save();
-            render();
         }
 
         // Antall gjester (ikke-tomme seter) ved et bord.
@@ -592,7 +560,7 @@
 
             state.tables.forEach(t => {
                 const el = document.createElement('div');
-                el.className = 'table' + (t.id === selectedId ? ' selected' : '') + (t.locked ? ' locked' : '');
+                el.className = 'table' + (t.id === selectedId ? ' selected' : '');
                 el.id = 'table-' + t.id;
                 el.style.left = t.x + 'px';
                 el.style.top = t.y + 'px';
@@ -600,18 +568,6 @@
                 const circle = document.createElement('div');
                 circle.className = 'table-circle';
                 el.appendChild(circle);
-
-                if (t.locked) {
-                    const badge = document.createElement('div');
-                    badge.className = 'lock-badge';
-                    badge.innerHTML = '🔒';
-                    badge.title = 'Låst bord (Ferdig) – klikk for å låse opp';
-                    badge.addEventListener('click', (ev) => {
-                        ev.stopPropagation();
-                        toggleLock(t.id);
-                    });
-                    el.appendChild(badge);
-                }
 
                 const count = Math.max(t.capacity, t.guests.length);
                 const spread = t.guests.length > t.capacity ? 1.14 : 1;
@@ -658,7 +614,7 @@
                 const handle = document.createElement('button');
                 handle.className = 'table-handle';
                 const over = cnt(t) > t.capacity;
-                handle.innerHTML = '<span class="t-name">' + (t.locked ? '🔒 ' : '') + escapeHtml(t.name) + '</span>' +
+                handle.innerHTML = '<span class="t-name">' + escapeHtml(t.name) + '</span>' +
                     '<span class="t-count' + (over ? ' over' : '') + '">' + cnt(t) + '/' + t.capacity + '</span>';
                 handle.addEventListener('click', () => { selectedId = t.id; render(); });
                 handle.addEventListener('pointerdown', ev => startDragTable(ev, t));
@@ -686,18 +642,13 @@
             const t = state.tables.find(x => x.id === selectedId);
             const options = state.tables.map(x =>
                 '<option value="' + x.id + '"' + (x.id === selectedId ? ' selected' : '') + '>' +
-                (x.locked ? '🔒 ' : '') + escapeHtml(x.name) + ' (' + cnt(x) + '/' + x.capacity + ')</option>'
+                escapeHtml(x.name) + ' (' + cnt(x) + '/' + x.capacity + ')</option>'
             ).join('');
             const allergiRows = t.guests.filter(g => g && ALLERGI[g])
                 .map(g => '<div><span class="a-name">' + escapeHtml(g) + ':</span> ' + escapeHtml(ALLERGI[g]) + '</div>').join('');
             const gval = t.guests.map(g => g || '').join('\n').replace(/\n+$/, '');
             c.innerHTML =
-                '<h2>Rediger bord ' + (t.locked ? '<span style="font-size:0.9rem; color:#2e7d32; font-weight:normal;">🔒 Låst</span>' : '') + '</h2>' +
-                '<div style="margin-bottom:0.75rem;">' +
-                '<button class="btn" style="width:100%; ' + (t.locked ? 'background:#2e7d32;' : 'background:var(--primary);') + '" onclick="toggleLock(\'' + t.id + '\')">' +
-                (t.locked ? '🔒 Låst (Klikk for å låse opp)' : '🔓 Marker som ferdig (Lås bord)') +
-                '</button>' +
-                '</div>' +
+                '<h2>Rediger bord</h2>' +
                 '<label>Velg bord</label>' +
                 '<select id="table-select">' + options + '</select>' +
                 '<label>Endre navn</label>' +
@@ -768,17 +719,16 @@
         function renderStats() {
             const seated = state.tables.reduce((s, t) => s + cnt(t), 0);
             const cap = state.tables.reduce((s, t) => s + t.capacity, 0);
-            const lockedCount = state.tables.filter(t => t.locked).length;
             document.getElementById('stats').innerHTML =
                 '<strong>' + seated + '</strong> plassert · ' +
                 '<strong>' + state.waiting.length + '</strong> uplassert · ' +
-                state.tables.length + ' bord' + (lockedCount ? ' (<strong>' + lockedCount + '</strong> låst 🔒)' : '') + ' · ' + cap + ' plasser totalt';
+                state.tables.length + ' bord · ' + cap + ' plasser totalt';
         }
 
         function renderActive() { if (view === 'grid') renderGrid(); else renderBoard(); }
 
         function render() {
-            renderBoard();
+            renderActive();
             renderStats();
         }
 
@@ -798,12 +748,12 @@
             wrap.innerHTML = '';
             state.tables.forEach(t => {
                 const card = document.createElement('div');
-                card.className = 'grid-table' + (t.id === selectedId ? ' selected' : '') + (t.locked ? ' locked' : '');
+                card.className = 'grid-table' + (t.id === selectedId ? ' selected' : '');
 
                 const over = cnt(t) > t.capacity;
                 const th = document.createElement('div');
                 th.className = 'grid-th';
-                th.innerHTML = '<span class="gt-name">' + (t.locked ? '🔒 ' : '') + escapeHtml(t.name) + '</span>' +
+                th.innerHTML = '<span class="gt-name">' + escapeHtml(t.name) + '</span>' +
                     '<span class="gt-count' + (over ? ' over' : '') + '">' + cnt(t) + '/' + t.capacity + '</span>';
                 th.addEventListener('click', () => { selectedId = t.id; render(); });
                 card.appendChild(th);
@@ -963,7 +913,6 @@
         }
         let dragTable = null;
         function startDragTable(ev, t) {
-            if (t.locked) return;
             ev.preventDefault();
             const el = document.getElementById('table-' + t.id);
             dragTable = {

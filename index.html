@@ -763,6 +763,15 @@
         </div>
     </div>
 
+    <div id="bordplassering-page" class="hidden">
+        <div class="container page-content">
+            <h2>Bordplassering</h2>
+            <div class="info-text">
+                <p style="text-align: center;">Bordplassering vil bli publisert nærmere bryllupsdagen.</p>
+            </div>
+        </div>
+    </div>
+
     <div id="bildegalleri-page" class="hidden">
         <div class="container page-content">
             <h2>Bildegalleri</h2>
@@ -888,14 +897,13 @@
         updateRoleDisplay();
         // ===== SLUTT PÅ LOGG UT =====
         // Navigation
-        const pages = ['home', 'gaveliste', 'gjesteliste', 'bildegalleri'];
+        const pages = ['home', 'gaveliste', 'gjesteliste', 'bordplassering', 'bildegalleri'];
         const navLinks = document.querySelectorAll('.nav a');
 
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
-                const page = link.dataset.page;
-                if (!page) return;
                 e.preventDefault();
+                const page = link.dataset.page;
                 
                 // Update URL
                 if (page === 'home') {
