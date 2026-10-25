@@ -530,6 +530,7 @@
             </div>
             <div class="password-error" id="password-error">Feil passord, prøv igjen</div>
             <button onclick="checkPassword()" class="password-submit">Åpne</button>
+            <p style="margin: 1.5rem 0 0;"><a href="/apper/" style="color: var(--secondary);">Bare ute etter appene? Åpne Apper →</a></p>
         </div>
     </div>
     <div class="header">
@@ -541,6 +542,7 @@
             <a href="#gaveliste" data-page="gaveliste">Ønskeliste</a>
             <a href="bordplassering.html" id="bordplassering-link" style="display: none;">Bordplassering</a>
             <a href="#bildegalleri" data-page="bildegalleri">Bildegalleri</a>
+            <a href="/apper/">Apper</a>
         </nav>
     </div>
 
@@ -898,7 +900,7 @@
         // ===== SLUTT PÅ LOGG UT =====
         // Navigation
         const pages = ['home', 'gaveliste', 'gjesteliste', 'bordplassering', 'bildegalleri'];
-        const navLinks = document.querySelectorAll('.nav a');
+        const navLinks = document.querySelectorAll('.nav a[data-page]');
 
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
