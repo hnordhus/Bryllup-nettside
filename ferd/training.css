@@ -1,0 +1,41 @@
+#v-trening .scroll{max-width:1000px;margin:auto}
+.training-actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.training-actions button,.training-actions label,.training-actions a{padding:10px 14px;background:white;border:1px solid var(--border);border-radius:10px;font:inherit;cursor:pointer;color:var(--text);text-decoration:none}
+.training-actions input{display:none}
+.training-note{font-size:13px;color:var(--text-2);line-height:1.6;margin:10px 0}
+.training-goal{background:linear-gradient(140deg,#163c50,#236c69);color:white;border-radius:20px;padding:24px;margin:18px 0}
+.training-goal h2{font-size:26px;margin:8px 0}
+.training-goal p{font-size:14px;line-height:1.6}
+.training-goal svg{display:block;width:100%;height:auto;margin:12px 0}
+.training-trail{stroke-dasharray:800;stroke-dashoffset:800;animation:training-draw 1.4s ease-out forwards}
+@keyframes training-draw{to{stroke-dashoffset:0}}
+.training-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:16px 0}
+.training-summary article,.training-day{padding:16px;background:white;border:1px solid var(--border);border-radius:14px}
+.training-summary strong{display:block;font-size:24px;margin:8px 0}
+.training-summary small{color:var(--text-2);line-height:1.5}
+.training-days{display:flex;gap:12px;overflow:auto;scroll-snap-type:x mandatory;padding:8px 2px 16px}
+.training-day{flex:0 0 270px;scroll-snap-align:start}
+.training-day.today{border:2px solid var(--blue)}
+.training-day h3{font-size:15px;margin:10px 0}
+.training-day p{font-size:13px;line-height:1.6;color:var(--text-2)}
+.training-sessions{display:grid;gap:8px;margin-top:12px}
+.training-sessions details{background:white;border:1px solid var(--border);border-radius:12px;padding:14px}
+.training-sessions summary{cursor:pointer;line-height:1.6}
+.training-sessions p{font-size:13px;color:var(--text-2);line-height:1.8;margin-top:10px}
+.training-filter{font:inherit;padding:10px;border:1px solid var(--border);border-radius:8px;margin:8px 0}
+.training-error{color:#b42318;line-height:1.6}
+.training-capacity{padding:20px;background:white;border:1px solid var(--border);border-radius:16px;margin:16px 0}
+.training-capacity h3{margin:14px 0 8px;font-size:17px}
+.training-capacity p{font-size:14px;line-height:1.6;margin:8px 0;color:var(--text-2)}
+.training-capacity svg{width:100%;display:block;max-height:320px}
+.training-milestones{display:grid;gap:10px;margin:14px 0}
+.training-milestones p{border-left:2px solid #80e4bc;padding-left:12px}
+.training-volume{margin-top:16px}
+.training-volume summary{cursor:pointer}
+.training-volume svg{max-height:240px}
+.training-timeline-wrap{overflow-x:auto;margin-top:16px}
+.training-timeline-wrap svg{width:100%}
+.training-skier{animation:training-glide 1.6s ease-out}
+@keyframes training-glide{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.training-skier{animation:none}}
+@media(prefers-reduced-motion:reduce){.training-trail{animation:none;stroke-dashoffset:0}}

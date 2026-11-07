@@ -312,6 +312,7 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 .nav-ghost{font-family:var(--mono);font-size:12px;font-weight:600;text-align:center;margin-top:7px}
 .ghost-pin{font-size:20px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
 </style>
+<link rel="stylesheet" href="training.css">
 </head>
 <body>
 
@@ -489,12 +490,28 @@ h2.section{font-size:13px;font-weight:600;color:var(--text-2);margin:26px 0 10px
 </section>
 
 <!-- ══════════ NAV ══════════ -->
+<section id="v-trening" class="view">
+  <div class="scroll">
+    <h1 class="title">Trening mot Birken</h1>
+    <p class="training-note">Publisert plan og økter lastes automatisk fra en ferdig eksport. Disse treningsdataene er offentlig tilgjengelige. Garmin-nøkkel, GPS, søvn og private notater er ikke med; Garmin-synk skjer fortsatt kun lokalt.</p>
+    <div class="training-actions">
+      <a href="http://127.0.0.1:8766/#plan" target="_blank" rel="noopener">Åpne lokal Garmin-statistikk</a>
+      <button id="training-import" type="button">Importer treningseksport</button>
+      <input id="training-file" type="file" accept=".json,application/json" hidden>
+      <button id="training-clear" type="button">Vis publiserte data</button>
+    </div>
+    <p class="training-note">Den gamle detaljsiden er beholdt. Lenken virker på PC-en der du starter «Start Ferd.cmd» i statistikkverkstedet, ikke på telefonen.</p>
+    <p id="training-message" class="training-error" role="status"></p>
+    <div id="training-content"></div>
+  </div>
+</section>
 <nav class="nav">
   <button class="on" data-v="kart" onclick="go('kart')"><span class="ni">🗺️</span><span class="nt">Kart</span></button>
   <button data-v="ferd" onclick="go('ferd')"><span class="ni">🧭</span><span class="nt">På Ferd</span></button>
   <button data-v="steder" onclick="go('steder')"><span class="ni">📍</span><span class="nt">Steder</span></button>
   <button data-v="trofeer" onclick="go('trofeer')"><span class="ni">🏆</span><span class="nt">Trofeer</span></button>
   <button data-v="profil" onclick="go('profil')"><span class="ni">👤</span><span class="nt">Min Ferd</span></button>
+  <button data-v="trening" onclick="go('trening')"><span class="ni">⛷</span><span class="nt">Trening</span></button>
 </nav>
 
 <!-- ══════════ MODAL: nytt sted ══════════ -->
@@ -2764,6 +2781,7 @@ function go(v) {
   else if (v === 'steder') renderPlaces();
   else if (v === 'trofeer') renderTrophies();
   else if (v === 'profil') { renderProfile(); loadKeyField(); renderHomeField(); }
+  else if (v === 'trening') window.dispatchEvent(new Event('ferd-training-open'));
 }
 
 function saveKey() {
@@ -2783,7 +2801,7 @@ function escapeHtml(s) {
 
 /* ═══════════ BOOT ═══════════ */
 (function boot() {
-  // Build the web-app manifest at runtime so this stays a single file
+  // Build the web-app manifest at runtime.
   try {
     const icon = new URL('icon.png', location.href).href;
     const iconEl = document.querySelector('link[rel="apple-touch-icon"]');
@@ -2818,5 +2836,6 @@ window.addEventListener('beforeunload', e => {
   if (active) { e.preventDefault(); e.returnValue = ''; }
 });
 </script>
+<script src="training.js"></script>
 </body>
 </html>
