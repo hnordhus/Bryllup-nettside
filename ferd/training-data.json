@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "exportedAt": "2026-11-18T09:37:25.088582+01:00",
-  "asOf": "2026-11-18",
+  "exportedAt": "2026-11-24T15:21:33.965329+01:00",
+  "asOf": "2026-11-24",
   "goals": {
     "anchor": "2026-10-24",
     "snowDate": "2027-01-01",
@@ -14,84 +14,6 @@
   },
   "plan": [
     {
-      "date": "2026-11-10",
-      "sport": "skierg",
-      "kind": "easy",
-      "title": "Rolig SkiErg + overkropp",
-      "detail": "40 min, ca. 2:11–2:17/500 m. Snakketempo er viktigere enn fart.",
-      "minutes": 40,
-      "status": "done",
-      "optional": false,
-      "actualSeconds": 2522.682,
-      "actualHeartRate": 141.0,
-      "sessionId": "session-12"
-    },
-    {
-      "date": "2026-11-11",
-      "sport": "running",
-      "kind": "run",
-      "title": "Rolig 25 min + bein",
-      "detail": "Tempouke, økt 2: 25 min i 130–140 bpm. Rolig økt mellom tempoøktene.",
-      "minutes": 25,
-      "status": "done",
-      "optional": false,
-      "actualSeconds": 1503.803955078125,
-      "actualHeartRate": 136.0,
-      "sessionId": "session-11"
-    },
-    {
-      "date": "2026-11-12",
-      "sport": "skierg",
-      "kind": "interval",
-      "title": "SkiErg 4 × 4 min + redusert overkropp",
-      "detail": "10 min oppvarming, 4 × 4 min @ 2:03–2:06/500 m, 2 min rolig pause, 4 min nedtrapping.",
-      "minutes": 36,
-      "status": "done",
-      "optional": false,
-      "actualSeconds": 755.431,
-      "actualHeartRate": 117.00000000000001,
-      "sessionId": "session-9"
-    },
-    {
-      "date": "2026-11-13",
-      "sport": "running",
-      "kind": "run",
-      "title": "Tempo 25 min + bein",
-      "detail": "25 min jevnt i 145–155 bpm (sone 3). Lengden er låst – kun fart endres. Ikke tung sled/hinking dagen før eller etter.",
-      "minutes": 25,
-      "status": "done",
-      "optional": false,
-      "actualSeconds": 1517.635009765625,
-      "actualHeartRate": 145.0,
-      "sessionId": "session-7"
-    },
-    {
-      "date": "2026-11-14",
-      "sport": "skierg",
-      "kind": "light",
-      "title": "Valgfri lett SkiErg + overkropp",
-      "detail": "10–20 min svært rolig, ca. 2:19–2:31/500 m. Bonusøkt i tempouke – dropp den hvis overkroppen er sliten.",
-      "minutes": 15,
-      "status": "optional",
-      "optional": true,
-      "actualSeconds": null,
-      "actualHeartRate": null,
-      "sessionId": null
-    },
-    {
-      "date": "2026-11-15",
-      "sport": "running",
-      "kind": "run",
-      "title": "Valgfri ekstra løpeøkt",
-      "detail": "Ukas 3 økter er allerede dekket. Ta heller hvile eller rolig sykkel/SkiErg.",
-      "minutes": null,
-      "status": "optional",
-      "optional": true,
-      "actualSeconds": null,
-      "actualHeartRate": null,
-      "sessionId": null
-    },
-    {
       "date": "2026-11-16",
       "sport": "skierg",
       "kind": "long",
@@ -102,7 +24,7 @@
       "optional": false,
       "actualSeconds": 3883.9300000000003,
       "actualHeartRate": 142.74593749114942,
-      "sessionId": "session-4"
+      "sessionId": "session-11"
     },
     {
       "date": "2026-11-17",
@@ -115,7 +37,7 @@
       "optional": false,
       "actualSeconds": 1622.280029296875,
       "actualHeartRate": 131.0,
-      "sessionId": "session-2"
+      "sessionId": "session-9"
     },
     {
       "date": "2026-11-18",
@@ -124,11 +46,11 @@
       "title": "Rolig SkiErg + overkropp",
       "detail": "40 min, ca. 2:11–2:17/500 m. Snakketempo er viktigere enn fart.",
       "minutes": 40,
-      "status": "planned",
+      "status": "done",
       "optional": false,
-      "actualSeconds": null,
-      "actualHeartRate": null,
-      "sessionId": null
+      "actualSeconds": 2444.0,
+      "actualHeartRate": 139.0,
+      "sessionId": "session-7"
     },
     {
       "date": "2026-11-19",
@@ -137,7 +59,7 @@
       "title": "Rolig 27 min + bein",
       "detail": "Volumuke, økt 2: 27 min i 130–140 bpm. Samme lengde som økt 1.",
       "minutes": 27,
-      "status": "planned",
+      "status": "missed",
       "optional": false,
       "actualSeconds": null,
       "actualHeartRate": null,
@@ -150,7 +72,7 @@
       "title": "SkiErg 4 × 5 min + redusert overkropp",
       "detail": "10 min oppvarming, 4 × 5 min @ 2:03–2:06/500 m, 2 min rolig pause, 4 min nedtrapping.",
       "minutes": 40,
-      "status": "planned",
+      "status": "missed",
       "optional": false,
       "actualSeconds": null,
       "actualHeartRate": null,
@@ -163,7 +85,7 @@
       "title": "Rolig 27 min + bein",
       "detail": "Volumuke, økt 3: 27 min i 130–140 bpm. Samme lengde som økt 1.",
       "minutes": 27,
-      "status": "planned",
+      "status": "missed",
       "optional": false,
       "actualSeconds": null,
       "actualHeartRate": null,
@@ -176,7 +98,7 @@
       "title": "SkiErg korte drag 6 × 1 min + overkropp",
       "detail": "10 min oppvarming, 6 × 1 min hardt @ 1:56–1:59/500 m med 1 min rolig mellom, 4 min nedtrapping.",
       "minutes": 25,
-      "status": "planned",
+      "status": "optional",
       "optional": false,
       "actualSeconds": null,
       "actualHeartRate": null,
@@ -189,11 +111,11 @@
       "title": "Rolig 25 min + bein",
       "detail": "Nedtrappingsuke, økt 1: 25 min i 130–140 bpm. Kortere for å la senen hente seg inn.",
       "minutes": 25,
-      "status": "planned",
+      "status": "done",
       "optional": false,
-      "actualSeconds": null,
-      "actualHeartRate": null,
-      "sessionId": null
+      "actualSeconds": 1672.2359619140625,
+      "actualHeartRate": 135.0,
+      "sessionId": "session-2"
     },
     {
       "date": "2026-11-24",
@@ -251,9 +173,9 @@
       "date": "2026-11-28",
       "sport": "skierg",
       "kind": "interval",
-      "title": "SkiErg 4 × 6 min + redusert overkropp",
-      "detail": "10 min oppvarming, 4 × 6 min @ 2:03–2:06/500 m, 2 min rolig pause, 4 min nedtrapping.",
-      "minutes": 44,
+      "title": "SkiErg 4 × 5 min + redusert overkropp",
+      "detail": "10 min oppvarming, 4 × 5 min @ 2:03–2:06/500 m, 2 min rolig pause, 4 min nedtrapping.",
+      "minutes": 40,
       "status": "planned",
       "optional": false,
       "actualSeconds": null,
@@ -277,9 +199,9 @@
       "date": "2026-11-30",
       "sport": "skierg",
       "kind": "vo2",
-      "title": "SkiErg korte drag 8 × 1 min + overkropp",
-      "detail": "10 min oppvarming, 8 × 1 min hardt @ 1:56–1:59/500 m med 1 min rolig mellom, 4 min nedtrapping.",
-      "minutes": 29,
+      "title": "SkiErg korte drag 6 × 1 min + overkropp",
+      "detail": "10 min oppvarming, 6 × 1 min hardt @ 1:56–1:59/500 m med 1 min rolig mellom, 4 min nedtrapping.",
+      "minutes": 25,
       "status": "planned",
       "optional": false,
       "actualSeconds": null,
@@ -324,11 +246,166 @@
       "actualSeconds": null,
       "actualHeartRate": null,
       "sessionId": null
+    },
+    {
+      "date": "2026-12-04",
+      "sport": "skierg",
+      "kind": "easy",
+      "title": "Rolig SkiErg + overkropp",
+      "detail": "40 min, ca. 2:11–2:17/500 m. Snakketempo er viktigere enn fart.",
+      "minutes": 40,
+      "status": "planned",
+      "optional": false,
+      "actualSeconds": null,
+      "actualHeartRate": null,
+      "sessionId": null
+    },
+    {
+      "date": "2026-12-05",
+      "sport": "running",
+      "kind": "run",
+      "title": "Rolig 29 min + bein",
+      "detail": "Volumuke, økt 3: 29 min i 130–140 bpm. Samme lengde som økt 1.",
+      "minutes": 29,
+      "status": "planned",
+      "optional": false,
+      "actualSeconds": null,
+      "actualHeartRate": null,
+      "sessionId": null
+    },
+    {
+      "date": "2026-12-06",
+      "sport": "skierg",
+      "kind": "interval",
+      "title": "SkiErg 4 × 6 min + redusert overkropp",
+      "detail": "10 min oppvarming, 4 × 6 min @ 2:03–2:06/500 m, 2 min rolig pause, 4 min nedtrapping.",
+      "minutes": 44,
+      "status": "planned",
+      "optional": false,
+      "actualSeconds": null,
+      "actualHeartRate": null,
+      "sessionId": null
+    },
+    {
+      "date": "2026-12-07",
+      "sport": "running",
+      "kind": "run",
+      "title": "Tempo 29 min + bein",
+      "detail": "29 min jevnt i 145–155 bpm (sone 3). Lengden er låst – kun fart endres. Ikke tung sled/hinking dagen før eller etter.",
+      "minutes": 29,
+      "status": "planned",
+      "optional": false,
+      "actualSeconds": null,
+      "actualHeartRate": null,
+      "sessionId": null
+    },
+    {
+      "date": "2026-12-08",
+      "sport": "skierg",
+      "kind": "light",
+      "title": "Valgfri lett SkiErg + overkropp",
+      "detail": "10–20 min svært rolig, ca. 2:19–2:31/500 m. Bonusøkt i tempouke – dropp den hvis overkroppen er sliten.",
+      "minutes": 15,
+      "status": "planned",
+      "optional": true,
+      "actualSeconds": null,
+      "actualHeartRate": null,
+      "sessionId": null
+    },
+    {
+      "date": "2026-12-09",
+      "sport": "running",
+      "kind": "run",
+      "title": "Rolig 29 min + bein",
+      "detail": "Tempouke, økt 2: 29 min i 130–140 bpm. Rolig økt mellom tempoøktene.",
+      "minutes": 29,
+      "status": "planned",
+      "optional": false,
+      "actualSeconds": null,
+      "actualHeartRate": null,
+      "sessionId": null
     }
   ],
   "activities": [
     {
       "id": "session-1",
+      "date": "2026-11-23",
+      "sport": "strength",
+      "seconds": 2366.93505859375,
+      "distance": 0.0,
+      "heartRate": 99.0,
+      "skiErgSeconds": null,
+      "skiErgHeartRate": null,
+      "strengthSeconds": null
+    },
+    {
+      "id": "session-2",
+      "date": "2026-11-23",
+      "sport": "running",
+      "seconds": 1672.2359619140625,
+      "distance": 5032.009765625,
+      "heartRate": 135.0,
+      "skiErgSeconds": null,
+      "skiErgHeartRate": null,
+      "strengthSeconds": null
+    },
+    {
+      "id": "session-3",
+      "date": "2026-11-21",
+      "sport": "skierg",
+      "seconds": 2400.3,
+      "distance": 9086.0,
+      "heartRate": 144.0,
+      "skiErgSeconds": null,
+      "skiErgHeartRate": null,
+      "strengthSeconds": null
+    },
+    {
+      "id": "session-4",
+      "date": "2026-11-20",
+      "sport": "strength",
+      "seconds": 1541.5269775390625,
+      "distance": 0.0,
+      "heartRate": 114.0,
+      "skiErgSeconds": null,
+      "skiErgHeartRate": null,
+      "strengthSeconds": null
+    },
+    {
+      "id": "session-5",
+      "date": "2026-11-20",
+      "sport": "running",
+      "seconds": 1624.218017578125,
+      "distance": 4520.0,
+      "heartRate": 132.0,
+      "skiErgSeconds": null,
+      "skiErgHeartRate": null,
+      "strengthSeconds": null
+    },
+    {
+      "id": "session-6",
+      "date": "2026-11-18",
+      "sport": "strength",
+      "seconds": 1887.343994140625,
+      "distance": 0.0,
+      "heartRate": 98.0,
+      "skiErgSeconds": null,
+      "skiErgHeartRate": null,
+      "strengthSeconds": null
+    },
+    {
+      "id": "session-7",
+      "date": "2026-11-18",
+      "sport": "skierg",
+      "seconds": 2444.0,
+      "distance": 9300.0,
+      "heartRate": 139.0,
+      "skiErgSeconds": null,
+      "skiErgHeartRate": null,
+      "strengthSeconds": null
+    },
+    {
+      "id": "session-8",
       "date": "2026-11-17",
       "sport": "strength",
       "seconds": 1717.5550537109375,
@@ -339,7 +416,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-2",
+      "id": "session-9",
       "date": "2026-11-17",
       "sport": "running",
       "seconds": 1622.280029296875,
@@ -350,7 +427,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-3",
+      "id": "session-10",
       "date": "2026-11-16",
       "sport": "strength",
       "seconds": 1422.6180419921875,
@@ -361,7 +438,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-4",
+      "id": "session-11",
       "date": "2026-11-16",
       "sport": "skierg",
       "seconds": 3977.180908203125,
@@ -372,7 +449,7 @@
       "strengthSeconds": 93.251
     },
     {
-      "id": "session-5",
+      "id": "session-12",
       "date": "2026-11-15",
       "sport": "skierg",
       "seconds": 2040.0469970703125,
@@ -383,7 +460,7 @@
       "strengthSeconds": 621.03
     },
     {
-      "id": "session-6",
+      "id": "session-13",
       "date": "2026-11-13",
       "sport": "strength",
       "seconds": 687.1619873046875,
@@ -394,7 +471,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-7",
+      "id": "session-14",
       "date": "2026-11-13",
       "sport": "running",
       "seconds": 1517.635009765625,
@@ -405,7 +482,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-8",
+      "id": "session-15",
       "date": "2026-11-12",
       "sport": "strength",
       "seconds": 1385.6510009765625,
@@ -416,7 +493,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-9",
+      "id": "session-16",
       "date": "2026-11-12",
       "sport": "skierg",
       "seconds": 2296.676025390625,
@@ -427,7 +504,7 @@
       "strengthSeconds": 1541.245
     },
     {
-      "id": "session-10",
+      "id": "session-17",
       "date": "2026-11-11",
       "sport": "strength",
       "seconds": 1953.875,
@@ -438,7 +515,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-11",
+      "id": "session-18",
       "date": "2026-11-11",
       "sport": "running",
       "seconds": 1503.803955078125,
@@ -449,7 +526,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-12",
+      "id": "session-19",
       "date": "2026-11-10",
       "sport": "skierg",
       "seconds": 3215.43603515625,
@@ -460,7 +537,7 @@
       "strengthSeconds": 692.754
     },
     {
-      "id": "session-13",
+      "id": "session-20",
       "date": "2026-11-09",
       "sport": "strength",
       "seconds": 1607.5250244140625,
@@ -471,7 +548,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-14",
+      "id": "session-21",
       "date": "2026-11-09",
       "sport": "running",
       "seconds": 1497.739013671875,
@@ -482,7 +559,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-15",
+      "id": "session-22",
       "date": "2026-11-08",
       "sport": "strength",
       "seconds": 1493.68896484375,
@@ -493,7 +570,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-16",
+      "id": "session-23",
       "date": "2026-11-08",
       "sport": "skierg",
       "seconds": 3117.215087890625,
@@ -504,7 +581,7 @@
       "strengthSeconds": 69.01
     },
     {
-      "id": "session-17",
+      "id": "session-24",
       "date": "2026-11-07",
       "sport": "strength",
       "seconds": 2644.39501953125,
@@ -515,7 +592,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-18",
+      "id": "session-25",
       "date": "2026-11-07",
       "sport": "running",
       "seconds": 1500.56396484375,
@@ -526,7 +603,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-19",
+      "id": "session-26",
       "date": "2026-11-06",
       "sport": "strength",
       "seconds": 632.448974609375,
@@ -537,7 +614,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-20",
+      "id": "session-27",
       "date": "2026-11-06",
       "sport": "skierg",
       "seconds": 2643.279052734375,
@@ -548,7 +625,7 @@
       "strengthSeconds": 378.865
     },
     {
-      "id": "session-21",
+      "id": "session-28",
       "date": "2026-11-05",
       "sport": "strength",
       "seconds": 2130.79296875,
@@ -559,7 +636,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-22",
+      "id": "session-29",
       "date": "2026-11-05",
       "sport": "running",
       "seconds": 1538.68603515625,
@@ -570,7 +647,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-23",
+      "id": "session-30",
       "date": "2026-11-04",
       "sport": "strength",
       "seconds": 909.5689697265625,
@@ -581,7 +658,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-24",
+      "id": "session-31",
       "date": "2026-11-04",
       "sport": "skierg",
       "seconds": 1593.6190185546875,
@@ -592,7 +669,7 @@
       "strengthSeconds": 0
     },
     {
-      "id": "session-25",
+      "id": "session-32",
       "date": "2026-11-03",
       "sport": "other",
       "seconds": 6365.10107421875,
@@ -603,7 +680,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-26",
+      "id": "session-33",
       "date": "2026-11-02",
       "sport": "cycling",
       "seconds": 1818.113037109375,
@@ -614,7 +691,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-27",
+      "id": "session-34",
       "date": "2026-11-02",
       "sport": "skierg",
       "seconds": 3603.93310546875,
@@ -625,7 +702,7 @@
       "strengthSeconds": 1349.704
     },
     {
-      "id": "session-28",
+      "id": "session-35",
       "date": "2026-11-02",
       "sport": "cycling",
       "seconds": 1472.6500244140625,
@@ -636,7 +713,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-29",
+      "id": "session-36",
       "date": "2026-11-01",
       "sport": "running",
       "seconds": 1520.8809814453125,
@@ -647,7 +724,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-30",
+      "id": "session-37",
       "date": "2026-11-01",
       "sport": "other",
       "seconds": 6979.38623046875,
@@ -658,7 +735,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-31",
+      "id": "session-38",
       "date": "2026-10-31",
       "sport": "skierg",
       "seconds": 5402.10107421875,
@@ -669,7 +746,7 @@
       "strengthSeconds": 2478.477
     },
     {
-      "id": "session-32",
+      "id": "session-39",
       "date": "2026-10-30",
       "sport": "recovery",
       "seconds": 746.2349853515625,
@@ -680,7 +757,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-33",
+      "id": "session-40",
       "date": "2026-10-29",
       "sport": "cycling",
       "seconds": 1863.31103515625,
@@ -691,7 +768,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-34",
+      "id": "session-41",
       "date": "2026-10-29",
       "sport": "skierg",
       "seconds": 2564.993896484375,
@@ -702,7 +779,7 @@
       "strengthSeconds": 1351.557
     },
     {
-      "id": "session-35",
+      "id": "session-42",
       "date": "2026-10-29",
       "sport": "cycling",
       "seconds": 1509.678955078125,
@@ -713,7 +790,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-36",
+      "id": "session-43",
       "date": "2026-10-29",
       "sport": "recovery",
       "seconds": 734.177978515625,
@@ -724,7 +801,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-37",
+      "id": "session-44",
       "date": "2026-10-28",
       "sport": "strength",
       "seconds": 1477.010986328125,
@@ -735,7 +812,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-38",
+      "id": "session-45",
       "date": "2026-10-28",
       "sport": "running",
       "seconds": 1395.550048828125,
@@ -746,7 +823,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-39",
+      "id": "session-46",
       "date": "2026-10-28",
       "sport": "cycling",
       "seconds": 1649.842041015625,
@@ -757,7 +834,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-40",
+      "id": "session-47",
       "date": "2026-10-28",
       "sport": "cycling",
       "seconds": 1448.1180419921875,
@@ -768,7 +845,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-41",
+      "id": "session-48",
       "date": "2026-10-28",
       "sport": "recovery",
       "seconds": 658.3419799804688,
@@ -779,7 +856,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-42",
+      "id": "session-49",
       "date": "2026-10-27",
       "sport": "skierg",
       "seconds": 3747.912109375,
@@ -790,7 +867,7 @@
       "strengthSeconds": 2193.875
     },
     {
-      "id": "session-43",
+      "id": "session-50",
       "date": "2026-10-27",
       "sport": "recovery",
       "seconds": 525.31298828125,
@@ -801,7 +878,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-44",
+      "id": "session-51",
       "date": "2026-10-26",
       "sport": "strength",
       "seconds": 2513.9541015625,
@@ -812,7 +889,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-45",
+      "id": "session-52",
       "date": "2026-10-26",
       "sport": "running",
       "seconds": 1370.904052734375,
@@ -823,7 +900,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-46",
+      "id": "session-53",
       "date": "2026-10-26",
       "sport": "cycling",
       "seconds": 1743.468017578125,
@@ -834,7 +911,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-47",
+      "id": "session-54",
       "date": "2026-10-26",
       "sport": "cycling",
       "seconds": 1497.7010498046875,
@@ -845,7 +922,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-48",
+      "id": "session-55",
       "date": "2026-10-25",
       "sport": "skierg",
       "seconds": 4734.48193359375,
@@ -856,7 +933,7 @@
       "strengthSeconds": 2633.748
     },
     {
-      "id": "session-49",
+      "id": "session-56",
       "date": "2026-10-24",
       "sport": "other",
       "seconds": 4707.10107421875,
@@ -867,7 +944,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-50",
+      "id": "session-57",
       "date": "2026-10-24",
       "sport": "other",
       "seconds": 1040.4749755859375,
@@ -878,7 +955,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-51",
+      "id": "session-58",
       "date": "2026-10-23",
       "sport": "skierg",
       "seconds": 747.5609741210938,
@@ -889,7 +966,7 @@
       "strengthSeconds": 0
     },
     {
-      "id": "session-52",
+      "id": "session-59",
       "date": "2026-10-23",
       "sport": "cycling",
       "seconds": 1727.7860107421875,
@@ -900,7 +977,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-53",
+      "id": "session-60",
       "date": "2026-10-23",
       "sport": "cycling",
       "seconds": 1485.1109619140625,
@@ -911,7 +988,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-54",
+      "id": "session-61",
       "date": "2026-10-23",
       "sport": "recovery",
       "seconds": 700.0999755859375,
@@ -922,7 +999,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-55",
+      "id": "session-62",
       "date": "2026-10-22",
       "sport": "strength",
       "seconds": 2599.568115234375,
@@ -933,7 +1010,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-56",
+      "id": "session-63",
       "date": "2026-10-22",
       "sport": "running",
       "seconds": 1278.06298828125,
@@ -944,7 +1021,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-57",
+      "id": "session-64",
       "date": "2026-10-22",
       "sport": "recovery",
       "seconds": 3263.095947265625,
@@ -955,7 +1032,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-58",
+      "id": "session-65",
       "date": "2026-10-21",
       "sport": "other",
       "seconds": 3805.705078125,
@@ -966,7 +1043,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-59",
+      "id": "session-66",
       "date": "2026-10-21",
       "sport": "strength",
       "seconds": 1914.7249755859375,
@@ -977,7 +1054,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-60",
+      "id": "session-67",
       "date": "2026-10-20",
       "sport": "strength",
       "seconds": 2228.30908203125,
@@ -988,7 +1065,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-61",
+      "id": "session-68",
       "date": "2026-10-20",
       "sport": "running",
       "seconds": 1232.761962890625,
@@ -999,7 +1076,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-62",
+      "id": "session-69",
       "date": "2026-10-19",
       "sport": "strength",
       "seconds": 2168.593017578125,
@@ -1010,7 +1087,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-63",
+      "id": "session-70",
       "date": "2026-10-18",
       "sport": "other",
       "seconds": 4539.93310546875,
@@ -1021,7 +1098,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-64",
+      "id": "session-71",
       "date": "2026-10-17",
       "sport": "recovery",
       "seconds": 1674.0830078125,
@@ -1032,7 +1109,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-65",
+      "id": "session-72",
       "date": "2026-10-17",
       "sport": "other",
       "seconds": 15757.490234375,
@@ -1043,7 +1120,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-66",
+      "id": "session-73",
       "date": "2026-10-13",
       "sport": "recovery",
       "seconds": 610.1370239257812,
@@ -1054,7 +1131,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-67",
+      "id": "session-74",
       "date": "2026-10-12",
       "sport": "strength",
       "seconds": 1931.470947265625,
@@ -1065,7 +1142,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-68",
+      "id": "session-75",
       "date": "2026-10-11",
       "sport": "running",
       "seconds": 1291.052001953125,
@@ -1076,7 +1153,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-69",
+      "id": "session-76",
       "date": "2026-10-07",
       "sport": "cycling",
       "seconds": 1683.197021484375,
@@ -1087,7 +1164,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-70",
+      "id": "session-77",
       "date": "2026-10-07",
       "sport": "recovery",
       "seconds": 1852.4949951171875,
@@ -1098,7 +1175,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-71",
+      "id": "session-78",
       "date": "2026-10-07",
       "sport": "cycling",
       "seconds": 1502.3929443359375,
@@ -1109,7 +1186,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-72",
+      "id": "session-79",
       "date": "2026-10-04",
       "sport": "cycling",
       "seconds": 4714.02294921875,
@@ -1120,7 +1197,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-73",
+      "id": "session-80",
       "date": "2026-10-03",
       "sport": "running",
       "seconds": 1353.958984375,
@@ -1131,7 +1208,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-74",
+      "id": "session-81",
       "date": "2026-10-02",
       "sport": "strength",
       "seconds": 1909.072021484375,
@@ -1142,7 +1219,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-75",
+      "id": "session-82",
       "date": "2026-10-02",
       "sport": "recovery",
       "seconds": 640.7470092773438,
@@ -1153,7 +1230,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-76",
+      "id": "session-83",
       "date": "2026-10-01",
       "sport": "running",
       "seconds": 1381.0989990234375,
@@ -1164,7 +1241,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-77",
+      "id": "session-84",
       "date": "2026-10-01",
       "sport": "cycling",
       "seconds": 1690.426025390625,
@@ -1175,7 +1252,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-78",
+      "id": "session-85",
       "date": "2026-10-01",
       "sport": "cycling",
       "seconds": 1413.281005859375,
@@ -1186,7 +1263,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-79",
+      "id": "session-86",
       "date": "2026-09-30",
       "sport": "cycling",
       "seconds": 1684.0909423828125,
@@ -1197,7 +1274,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-80",
+      "id": "session-87",
       "date": "2026-09-30",
       "sport": "cycling",
       "seconds": 1432.1400146484375,
@@ -1208,7 +1285,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-81",
+      "id": "session-88",
       "date": "2026-09-29",
       "sport": "strength",
       "seconds": 2606.428955078125,
@@ -1219,7 +1296,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-82",
+      "id": "session-89",
       "date": "2026-09-29",
       "sport": "cycling",
       "seconds": 2016.446044921875,
@@ -1230,7 +1307,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-83",
+      "id": "session-90",
       "date": "2026-09-29",
       "sport": "cycling",
       "seconds": 1548.48095703125,
@@ -1241,7 +1318,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-84",
+      "id": "session-91",
       "date": "2026-09-28",
       "sport": "strength",
       "seconds": 2755.092041015625,
@@ -1252,7 +1329,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-85",
+      "id": "session-92",
       "date": "2026-09-28",
       "sport": "running",
       "seconds": 1362.425048828125,
@@ -1263,7 +1340,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-86",
+      "id": "session-93",
       "date": "2026-09-28",
       "sport": "cycling",
       "seconds": 1636.8170166015625,
@@ -1274,7 +1351,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-87",
+      "id": "session-94",
       "date": "2026-09-28",
       "sport": "cycling",
       "seconds": 1455.740966796875,
@@ -1285,7 +1362,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-88",
+      "id": "session-95",
       "date": "2026-09-26",
       "sport": "strength",
       "seconds": 3926.739013671875,
@@ -1296,7 +1373,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-89",
+      "id": "session-96",
       "date": "2026-09-26",
       "sport": "running",
       "seconds": 1380.240966796875,
@@ -1307,7 +1384,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-90",
+      "id": "session-97",
       "date": "2026-09-25",
       "sport": "cycling",
       "seconds": 1685.333984375,
@@ -1318,7 +1395,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-91",
+      "id": "session-98",
       "date": "2026-09-25",
       "sport": "strength",
       "seconds": 1243.1669921875,
@@ -1329,7 +1406,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-92",
+      "id": "session-99",
       "date": "2026-09-25",
       "sport": "cycling",
       "seconds": 1347.968994140625,
@@ -1340,7 +1417,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-93",
+      "id": "session-100",
       "date": "2026-09-24",
       "sport": "cycling",
       "seconds": 1686.990966796875,
@@ -1351,7 +1428,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-94",
+      "id": "session-101",
       "date": "2026-09-24",
       "sport": "cycling",
       "seconds": 1490.469970703125,
@@ -1362,7 +1439,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-95",
+      "id": "session-102",
       "date": "2026-09-22",
       "sport": "strength",
       "seconds": 590.3469848632812,
@@ -1373,7 +1450,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-96",
+      "id": "session-103",
       "date": "2026-09-22",
       "sport": "running",
       "seconds": 2147.428955078125,
@@ -1384,7 +1461,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-97",
+      "id": "session-104",
       "date": "2026-09-20",
       "sport": "running",
       "seconds": 1394.2659912109375,
@@ -1395,7 +1472,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-98",
+      "id": "session-105",
       "date": "2026-09-18",
       "sport": "other",
       "seconds": 1216.3199462890625,
@@ -1406,7 +1483,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-99",
+      "id": "session-106",
       "date": "2026-09-18",
       "sport": "running",
       "seconds": 3332.535888671875,
@@ -1417,7 +1494,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-100",
+      "id": "session-107",
       "date": "2026-09-18",
       "sport": "other",
       "seconds": 2225.318115234375,
@@ -1428,7 +1505,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-101",
+      "id": "session-108",
       "date": "2026-09-09",
       "sport": "strength",
       "seconds": 946.291015625,
@@ -1439,7 +1516,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-102",
+      "id": "session-109",
       "date": "2026-09-09",
       "sport": "running",
       "seconds": 1387.5159912109375,
@@ -1450,7 +1527,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-103",
+      "id": "session-110",
       "date": "2026-09-08",
       "sport": "strength",
       "seconds": 2030.4840087890625,
@@ -1461,7 +1538,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-104",
+      "id": "session-111",
       "date": "2026-09-07",
       "sport": "cycling",
       "seconds": 1926.6199951171875,
@@ -1472,7 +1549,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-105",
+      "id": "session-112",
       "date": "2026-09-07",
       "sport": "recovery",
       "seconds": 843.1649780273438,
@@ -1483,7 +1560,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-106",
+      "id": "session-113",
       "date": "2026-09-07",
       "sport": "cycling",
       "seconds": 1499.77294921875,
@@ -1494,7 +1571,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-107",
+      "id": "session-114",
       "date": "2026-09-06",
       "sport": "running",
       "seconds": 1343.2349853515625,
@@ -1505,7 +1582,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-108",
+      "id": "session-115",
       "date": "2026-09-04",
       "sport": "recovery",
       "seconds": 2805.39697265625,
@@ -1516,7 +1593,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-109",
+      "id": "session-116",
       "date": "2026-09-04",
       "sport": "cycling",
       "seconds": 1340.0550537109375,
@@ -1527,7 +1604,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-110",
+      "id": "session-117",
       "date": "2026-09-03",
       "sport": "cycling",
       "seconds": 1560.073974609375,
@@ -1538,7 +1615,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-111",
+      "id": "session-118",
       "date": "2026-09-03",
       "sport": "cycling",
       "seconds": 1447.3280029296875,
@@ -1549,7 +1626,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-112",
+      "id": "session-119",
       "date": "2026-09-02",
       "sport": "running",
       "seconds": 1332.5059814453125,
@@ -1560,7 +1637,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-113",
+      "id": "session-120",
       "date": "2026-09-02",
       "sport": "cycling",
       "seconds": 1542.654052734375,
@@ -1571,7 +1648,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-114",
+      "id": "session-121",
       "date": "2026-09-02",
       "sport": "cycling",
       "seconds": 1460.365966796875,
@@ -1582,7 +1659,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-115",
+      "id": "session-122",
       "date": "2026-09-01",
       "sport": "cycling",
       "seconds": 1603.6199951171875,
@@ -1593,7 +1670,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-116",
+      "id": "session-123",
       "date": "2026-09-01",
       "sport": "strength",
       "seconds": 1961.7049560546875,
@@ -1604,7 +1681,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-117",
+      "id": "session-124",
       "date": "2026-09-01",
       "sport": "cycling",
       "seconds": 1437.125,
@@ -1615,7 +1692,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-118",
+      "id": "session-125",
       "date": "2026-08-31",
       "sport": "other",
       "seconds": 16553.08984375,
@@ -1626,7 +1703,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-119",
+      "id": "session-126",
       "date": "2026-08-30",
       "sport": "other",
       "seconds": 15712.6083984375,
@@ -1637,7 +1714,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-120",
+      "id": "session-127",
       "date": "2026-08-29",
       "sport": "strength",
       "seconds": 2718.306884765625,
@@ -1648,7 +1725,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-121",
+      "id": "session-128",
       "date": "2026-08-28",
       "sport": "strength",
       "seconds": 3880.256103515625,
@@ -1659,7 +1736,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-122",
+      "id": "session-129",
       "date": "2026-08-28",
       "sport": "running",
       "seconds": 1258.8280029296875,
@@ -1670,7 +1747,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-123",
+      "id": "session-130",
       "date": "2026-08-28",
       "sport": "cycling",
       "seconds": 1763.5679931640625,
@@ -1681,7 +1758,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-124",
+      "id": "session-131",
       "date": "2026-08-28",
       "sport": "cycling",
       "seconds": 1452.9229736328125,
@@ -1692,7 +1769,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-125",
+      "id": "session-132",
       "date": "2026-08-27",
       "sport": "cycling",
       "seconds": 3245.966064453125,
@@ -1703,7 +1780,7 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-126",
+      "id": "session-133",
       "date": "2026-08-27",
       "sport": "strength",
       "seconds": 1860.279052734375,
@@ -1714,89 +1791,12 @@
       "strengthSeconds": null
     },
     {
-      "id": "session-127",
+      "id": "session-134",
       "date": "2026-08-27",
       "sport": "cycling",
       "seconds": 1403.9630126953125,
       "distance": 10541.3603515625,
       "heartRate": 114.0,
-      "skiErgSeconds": null,
-      "skiErgHeartRate": null,
-      "strengthSeconds": null
-    },
-    {
-      "id": "session-128",
-      "date": "2026-08-25",
-      "sport": "running",
-      "seconds": 1294.27001953125,
-      "distance": 4155.7900390625,
-      "heartRate": 138.0,
-      "skiErgSeconds": null,
-      "skiErgHeartRate": null,
-      "strengthSeconds": null
-    },
-    {
-      "id": "session-129",
-      "date": "2026-08-24",
-      "sport": "cycling",
-      "seconds": 1607.0479736328125,
-      "distance": 10468.4296875,
-      "heartRate": 141.0,
-      "skiErgSeconds": null,
-      "skiErgHeartRate": null,
-      "strengthSeconds": null
-    },
-    {
-      "id": "session-130",
-      "date": "2026-08-24",
-      "sport": "strength",
-      "seconds": 2501.669921875,
-      "distance": 0.0,
-      "heartRate": 102.0,
-      "skiErgSeconds": null,
-      "skiErgHeartRate": null,
-      "strengthSeconds": null
-    },
-    {
-      "id": "session-131",
-      "date": "2026-08-24",
-      "sport": "cycling",
-      "seconds": 1525.9830322265625,
-      "distance": 10689.2900390625,
-      "heartRate": 123.0,
-      "skiErgSeconds": null,
-      "skiErgHeartRate": null,
-      "strengthSeconds": null
-    },
-    {
-      "id": "session-132",
-      "date": "2026-08-23",
-      "sport": "other",
-      "seconds": 8760.7548828125,
-      "distance": 4731.08984375,
-      "heartRate": 85.0,
-      "skiErgSeconds": null,
-      "skiErgHeartRate": null,
-      "strengthSeconds": null
-    },
-    {
-      "id": "session-133",
-      "date": "2026-08-21",
-      "sport": "cycling",
-      "seconds": 3240.8779296875,
-      "distance": 20460.80078125,
-      "heartRate": 135.0,
-      "skiErgSeconds": null,
-      "skiErgHeartRate": null,
-      "strengthSeconds": null
-    },
-    {
-      "id": "session-134",
-      "date": "2026-08-21",
-      "sport": "cycling",
-      "seconds": 1498.0260009765625,
-      "distance": 10766.8203125,
-      "heartRate": 124.0,
       "skiErgSeconds": null,
       "skiErgHeartRate": null,
       "strengthSeconds": null
