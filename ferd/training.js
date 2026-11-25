@@ -3,7 +3,7 @@
   'use strict';
   const KEY = 'ferd.training.v1';
   const sports = {running:'Løping', skierg:'SkiErg + styrke', cycling:'Sykling', strength:'Styrke', ski:'Ski', recovery:'Restitusjon', other:'Annet'};
-  const statuses = {done:'Registrert', missed:'Ikke registrert', planned:'Planlagt', optional:'Valgfri', rest:'Hviledag', replaced:'Erstattet – hard for leggen'};
+  const statuses = {done:'Registrert', missed:'Ikke registrert', planned:'Planlagt', optional:'Valgfri', rest:'Hviledag', replaced:'Erstattet – hard for leggen', moved:'Koblet til annen plandag'};
   const day = d => new Intl.DateTimeFormat('nb-NO', {day:'numeric', month:'short'}).format(new Date(`${d}T12:00:00`));
   const localDate = () => {
     const d = new Date();
@@ -40,13 +40,14 @@
     }
     const dates = new Set();
     for (const p of data.plan) {
-      object(p, ['date','sport','kind','title','detail','minutes','status','optional','actualSeconds','actualHeartRate','sessionId']);
+      object(p, ['date','sport','kind','title','detail','minutes','status','optional','actualSeconds','actualHeartRate','sessionId','actualDate','movedTo']);
       if (!validDate(p.date) || dates.has(p.date) || !Object.hasOwn(sports,p.sport) ||
           !Object.hasOwn(statuses,p.status) || typeof p.optional !== 'boolean' ||
           !['run','easy','interval','light','vo2','test','long','ski'].includes(p.kind)) fail();
       dates.add(p.date);
       for (const k of ['title','detail']) if (typeof p[k] !== 'string' || p[k].length > 3000) fail();
       for (const k of ['minutes','actualSeconds','actualHeartRate']) if (!number(p[k])) fail();
+      for (const k of ['actualDate','movedTo']) if (p[k] != null && !validDate(p[k])) fail();
       if (p.sessionId != null && !ids.has(p.sessionId)) fail();
     }
     return data;
@@ -55,7 +56,7 @@
     const end = today < data.asOf ? today : data.asOf;
     const start = shift(end,-6);
     const slots = data.plan.filter(p => p.date >= start && p.date <= end && !p.optional &&
-      (p.date < today || p.status === 'done' || p.status === 'replaced') && p.status !== 'rest');
+      (p.date < today || p.status === 'done' || p.status === 'replaced') && !['rest','moved'].includes(p.status));
     const measured = slots.filter(p => p.status !== 'replaced' && p.minutes != null);
     let planned = 0, actual = 0;
     const points = [];
@@ -249,7 +250,7 @@
       volume.append(drawProgress(c),node('p',`${Math.round(c.actual)} / ${Math.round(c.planned)} min i sammenlignbare økter · ${diff < 0 ? `${-diff} min under` : `${diff} min over`} planlagt tid.`));
       if (c.unknown) volume.append(node('p',`${c.unknown} registrerte økter mangler treningstid; sammenligningen er ufullstendig.`));
     }
-    volume.append(node('p','Flate partier betyr ingen nye sammenlignbare økter, ikke at kondisjonen står stille. Ekstra sykling, styrke og padel ligger utenfor tidskurven; mer er ikke automatisk bedre.'));
+    volume.append(node('p','Gjennomføringen følger planlagt dato, også når en økt ble flyttet. Flate partier betyr ingen nye sammenlignbare økter, ikke at kondisjonen står stille. Ekstra sykling, styrke og padel ligger utenfor tidskurven; mer er ikke automatisk bedre.'));
     goal.append(volume);
     root.append(goal,renderCapacity(today,goals));
     root.append(node('h2','Trening siste 7 dager','section'));
@@ -276,7 +277,7 @@
       const card = node('article',null,`training-day${p.date === today ? ' today' : ''}`);
       card.dataset.date = p.date;
       card.append(node('strong',`${p.date === today ? 'I dag · ' : ''}${day(p.date)}`),node('h3',p.title),
-        node('p',p.detail),node('p',`${statuses[p.status]}${p.actualSeconds != null ? ` · ${minutes(p.actualSeconds)}` : ''}`));
+        node('p',p.detail),node('p',`${statuses[p.status]}${p.actualSeconds != null ? ` · ${minutes(p.actualSeconds)}` : ''}${p.actualDate && p.actualDate !== p.date ? ` · gjennomført ${day(p.actualDate)}` : ''}${p.movedTo ? ` · planlagt ${day(p.movedTo)}` : ''}`));
       wheel.append(card);
     }
     root.append(wheel);

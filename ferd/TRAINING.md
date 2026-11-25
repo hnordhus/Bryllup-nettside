@@ -24,6 +24,9 @@ Manuell import er fortsatt mulig og lagres i nettleseren. En nyere lokal
 import bevares fremfor en eldre publisert fil. **Vis publiserte data** fjerner
 kun lokal treningseksport og henter den offentlige filen igjen.
 Nettverks- og valideringsfeil vises eksplisitt; tidligere viste data beholdes.
+Forskjøvede økter viser både planlagt og faktisk dato. Økten vises bare én
+gang i plangjennomføringen; dager der økten er koblet til en annen planplass
+vises separat og telles ikke som tapte.
 
 Den lokale appen er beholdt på `http://127.0.0.1:8766`. Start den med
 `Start Ferd.cmd` i statistikkverkstedet. Lenken fra Trening-fanen fungerer kun

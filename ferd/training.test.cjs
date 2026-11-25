@@ -34,6 +34,15 @@ test('unknown actual time is explicit',() => {
   const data = fixture(); data.plan[1].actualSeconds = null;
   assert.equal(comparison(data,'2026-11-05').unknown,1);
 });
+test('moved sessions are not counted twice and actual dates are validated',() => {
+  const data = fixture();
+  data.plan[0] = {...data.plan[0],status:'moved',movedTo:'2026-11-01'};
+  data.plan[1].actualDate='2026-11-05';
+  validate(data);
+  assert.equal(comparison(data,'2026-11-05').slots.length,1);
+  data.plan[1].actualDate='2026-02-30';
+  assert.throws(() => validate(data));
+});
 test('reject secrets and malformed records',() => {
   for (const change of [
     d => {d.garminKey='secret';},
